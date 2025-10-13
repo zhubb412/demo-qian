@@ -534,6 +534,7 @@ export default {
         return imageData;
       }
       
+      
     };
 
     /**
