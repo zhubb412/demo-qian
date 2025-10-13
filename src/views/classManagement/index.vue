@@ -128,6 +128,23 @@
       </div>
     </div>
 
+    <!-- 分页组件 - 只有当数据超过8条时才显示 -->
+    <div v-if="pagination.total > 8" class="pagination-container">
+      <el-pagination
+        v-model:current-page="pagination.current"
+        v-model:page-size="pagination.size"
+        :page-sizes="[8, 16, 24, 32]"
+        :total="pagination.total"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handleSizeChange"
+        @current-change="handlePageChange"
+        background
+        :page-size-options="['8条/页', '16条/页', '24条/页', '32条/页']"
+        :total-text="`共 ${pagination.total} 条`"
+        :jumper-text="'前往'"
+      />
+    </div>
+
     <!-- 新增/编辑种类对话框 -->
     <el-dialog 
       :title="isEditMode ? '编辑种类' : '新增种类'" 
@@ -192,9 +209,12 @@
             :auto-upload="true"
           >
             <img v-if="formData.classImage" :src="getImagePreviewUrl(formData.classImage)" class="uploaded-image" />
-            <el-icon v-else class="image-uploader-icon"><Plus /></el-icon>
+            <div v-else class="upload-placeholder">
+              <div class="upload-icon">+</div>
+              <div class="upload-text">点击上传图片</div>
+            </div>
           </el-upload>
-          <div class="upload-tip">点击上传图片，支持jpg、png格式</div>
+          <div class="upload-tip">支持jpg、png格式，文件大小不超过2MB</div>
         </el-form-item>
       </el-form>
       
@@ -215,7 +235,7 @@
 import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Picture, Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus } from '@element-plus/icons-vue';
-import { classManagementList, type CategoryItem } from '@/api/classManagementApi';
+import { classManagementList, type CategoryItem, type PaginationResult } from '@/api/classManagementApi';
 
 // 使用API中定义的接口类型
 type Category = CategoryItem;
@@ -231,6 +251,14 @@ export default {
     
     /** 种类列表数据 */
     const categories = ref<Category[]>([]);
+    
+    /** 分页信息 */
+    const pagination = ref({
+      current: 1,    // 当前页
+      size: 8,       // 每页条数
+      total: 0,      // 总条数
+      pages: 0       // 总页数
+    });
     
     /** 搜索表单数据 */
     const searchForm = ref({
@@ -291,22 +319,50 @@ export default {
     
 
     /**
-     * 获取种类列表数据
-     * @param searchParams 搜索参数
+     * 准备搜索参数
      */
-    const fetchCategories = async (searchParams?: { className?: string; classType?: string }) => {
+    const getSearchParams = () => {
+      const params: { className?: string; classType?: string } = {};
+      if (searchForm.value.className.trim()) {
+        params.className = searchForm.value.className.trim();
+      }
+      if (searchForm.value.classType.trim()) {
+        params.classType = searchForm.value.classType.trim();
+      }
+      return params;
+    };
+
+    /**
+     * 获取种类列表数据
+     */
+    const fetchCategories = async (page: number = pagination.value.current, pageSize: number = pagination.value.size) => {
       try {
-        // 调用后端API获取种类列表数据
-        const response = await classManagementList.listclassManagement(searchParams);
-        console.log('重新获取的数据:', response);
+        const params = {
+          ...getSearchParams(),
+          current: page,
+          size: pageSize
+        };
         
-        // 从响应中提取种类数据，如果response.data为空则使用空数组作为默认值
-        categories.value = response.data || [];
-        console.log('更新后的categories:', categories.value);
+        console.log('请求参数:', params);
+        const response = await classManagementList.listclassManagement(params);
+        console.log('API响应:', response);
         
-        // 提取所有种类类型用于下拉选择
+        if (response && response.records) {
+          categories.value = response.records || [];
+          pagination.value = {
+            current: response.current,
+            size: response.size,
+            total: response.total,
+            pages: response.pages
+          };
+        } else {
+          categories.value = [];
+          pagination.value = { current: 1, size: 8, total: 0, pages: 0 };
+        }
+        
+        // 提取种类类型用于下拉选择
         const types = [...new Set(categories.value.map(cat => cat.classType))];
-        classTypes.value = types.filter(type => type); // 过滤掉空值
+        classTypes.value = types.filter(type => type);
       } catch (error) {
         console.error('获取种类列表失败:', error);
         ElMessage.error('获取种类列表失败');
@@ -317,37 +373,17 @@ export default {
      * 执行搜索操作
      */
     const handleSearch = () => {
-      // 准备搜索参数
-      const searchParams: { className?: string; classType?: string } = {};
-      
-      // 如果种类名称不为空，添加到搜索参数
-      if (searchForm.value.className.trim()) {
-        searchParams.className = searchForm.value.className.trim();
-      }
-      
-      // 如果种类类型不为空，添加到搜索参数
-      if (searchForm.value.classType.trim()) {
-        searchParams.classType = searchForm.value.classType.trim();
-      }
-      
-      console.log('搜索参数:', searchParams);
-      
-      // 调用API进行搜索
-      fetchCategories(searchParams);
+      pagination.value.current = 1;
+      fetchCategories(1, pagination.value.size);
     };
 
     /**
      * 重置搜索条件
      */
     const handleReset = () => {
-      // 清空搜索表单
-      searchForm.value = {
-        className: '',
-        classType: ''
-      };
-      
-      // 重新获取所有数据
-      fetchCategories();
+      searchForm.value = { className: '', classType: '' };
+      pagination.value.current = 1;
+      fetchCategories(1, pagination.value.size);
     };
 
     /**
@@ -438,26 +474,22 @@ export default {
         // 准备提交数据
         const submitData = prepareSubmitData();
         
-        console.log('提交的数据:', submitData);
-        
         if (isEditMode.value) {
           // 编辑模式：调用更新API
           const updateData = {
             ...submitData,
             classId: currentCategory.value.classId
           };
-          const updateResponse = await classManagementList.editclassManagement(updateData);
-          console.log('更新API响应:', updateResponse);
+          await classManagementList.editclassManagement(updateData);
           ElMessage.success('编辑种类成功');
         } else {
           // 新增模式：调用新增API
-          const addResponse = await classManagementList.addclassManagement(submitData);
-          console.log('新增API响应:', addResponse);
+          await classManagementList.addclassManagement(submitData);
           ElMessage.success('新增种类成功');
         }
         
         // 操作成功后刷新列表
-        await fetchCategories();
+        await fetchCategories(pagination.value.current, pagination.value.size);
         
         // 关闭对话框
         handleClose();
@@ -478,16 +510,8 @@ export default {
       const { file, onSuccess, onError } = options;
       
       try {
-        console.log('开始上传文件:', file.name);
-        
         // 调用文件上传接口
         const response = await classManagementList.uploadFile(file);
-        
-        console.log('上传响应:', response);
-        
-        // 从响应中提取文件路径
-        // 响应格式: "文件上传成功: D:/demo-hou/uploads/filename.jpg"
-        const filePath = response.replace('文件上传成功: ', '');
         
         // 构造访问URL
         const imageUrl = `http://localhost:8080/uploads/${file.name}`;
@@ -495,7 +519,6 @@ export default {
         // 保存图片URL到表单数据
         formData.value.classImage = imageUrl;
         
-        console.log('图片上传成功，URL:', imageUrl);
         onSuccess(response);
         ElMessage.success('图片上传成功');
         
@@ -510,7 +533,6 @@ export default {
      * 图片文件选择变化处理
      */
     const handleImageChange = (file: any, fileList: any) => {
-      console.log('文件选择变化:', file);
       // 文件验证在beforeImageUpload中处理
     };
 
@@ -518,23 +540,21 @@ export default {
      * 图片上传成功回调（保留用于兼容）
      */
     const handleImageSuccess = (response: any, file: any) => {
-      console.log('图片上传成功回调:', response);
+      // 保留用于兼容
     };
 
     /**
      * 获取图片预览URL
      */
     const getImagePreviewUrl = (imageData: string) => {
-      console.log('获取图片预览URL，imageData:', imageData ? '有数据' : '无数据');
       if (!imageData) return '';
       
       // 如果是完整的URL（http开头），直接返回
       if (imageData.startsWith('http')) {
-        console.log('返回完整URL');
         return imageData;
       }
       
-      
+      return imageData;
     };
 
     /**
@@ -570,10 +590,35 @@ export default {
         
         // 显示删除成功提示
         ElMessage.success('删除成功');
+        
+        // 如果当前页没有数据了且不是第一页，则跳转到上一页
+        if (categories.value.length === 0 && pagination.value.current > 1) {
+          pagination.value.current -= 1;
+        }
+        // 刷新当前页数据
+        await fetchCategories(pagination.value.current, pagination.value.size);
       } catch (error) {
         console.error('删除种类失败:', error);
         ElMessage.error('删除失败，请重试');
       }
+    };
+
+    /**
+     * 处理分页变化
+     */
+    const handlePageChange = async (page: number) => {
+      console.log('分页变化:', page);
+      pagination.value.current = page;
+      await fetchCategories(page, pagination.value.size);
+    };
+
+    /**
+     * 处理每页条数变化
+     */
+    const handleSizeChange = async (size: number) => {
+      pagination.value.current = 1;
+      pagination.value.size = size;
+      await fetchCategories(1, size);
     };
 
     // 组件初始化时加载数据
@@ -582,6 +627,7 @@ export default {
     // 返回组件需要的数据和方法
     return {
       categories,
+      pagination,
       searchForm,
       classTypes,
       currentCategory,
@@ -605,6 +651,8 @@ export default {
       getImagePreviewUrl,
       beforeImageUpload,
       deleteCategory,
+      handlePageChange,
+      handleSizeChange,
       // 图标组件
       Search,
       Refresh,
@@ -691,6 +739,39 @@ h2 {
 
 .image-uploader:hover {
   border-color: #409eff;
+}
+
+/* 上传占位符样式 */
+.upload-placeholder {
+  width: 178px;
+  height: 178px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  background-color: #fafafa;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.upload-placeholder:hover {
+  border-color: #409eff;
+  background-color: #f5f7fa;
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: #8c939d;
+  margin-bottom: 8px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.upload-text {
+  font-size: 14px;
+  color: #8c939d;
 }
 
 .image-uploader-icon {
@@ -830,6 +911,25 @@ h2 {
   flex: 1;
   max-width: 60px;
   height: 30px;
+}
+
+/* 分页组件样式 */
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  padding: 20px 0;
+}
+
+.pagination-container .el-pagination {
+  --el-pagination-bg-color: #fff;
+  --el-pagination-text-color: #606266;
+  --el-pagination-border-radius: 4px;
+  --el-pagination-button-bg-color: #fff;
+  --el-pagination-button-color: #606266;
+  --el-pagination-button-disabled-bg-color: #fff;
+  --el-pagination-button-disabled-color: #c0c4cc;
+  --el-pagination-hover-color: #409eff;
 }
 
 /* 响应式设计 */

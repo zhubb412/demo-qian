@@ -16,10 +16,24 @@ export interface CategoryItem {
 }
 
 
+// 分页响应接口
+export interface PaginationResult<T> {
+    records: T[];
+    total: number;
+    size: number;
+    current: number;
+    pages: number;
+}
+
 export class classManagementList {
-    //获取所有种类 模糊查询一起
-    static listclassManagement(params?: { className?: string; classType?: string }) {
-        return request.get<BaseArrayResult<CategoryItem>>({
+    //获取所有种类 模糊查询一起，支持分页
+    static listclassManagement(params?: { 
+        className?: string; 
+        classType?: string;
+        current?: number;
+        size?: number;
+    }) {
+        return request.get<PaginationResult<CategoryItem>>({
             url: '/cropClass/list',
             params
         })

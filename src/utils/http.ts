@@ -50,12 +50,15 @@ service.interceptors.response.use(
     
     // 如果后端返回的是包装格式，按原来的逻辑处理
     // 兼容字符串和数字类型的code
-    if (String(data.code) === '200' || String(data.code) === '0') {
+    if (data.code !== undefined && (String(data.code) === '200' || String(data.code) === '0')) {
       return data
-    } else {
+    } else if (data.code !== undefined) {
       // 处理业务错误
       console.error('API Error:', data.msg)
       return Promise.reject(new Error(data.msg || '请求失败'))
+    } else {
+      // 如果后端直接返回对象（如分页数据），直接返回
+      return data
     }
   },
   (error) => {
