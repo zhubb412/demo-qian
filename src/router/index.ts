@@ -13,7 +13,28 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/main',
     name: 'Main',
-    component: () => import('@/views/leftNavigation/index.vue')
+    component: () => import('@/views/leftNavigation/index.vue'),
+    children: [
+      {
+        path: '',
+        redirect: '/main/dashboard'
+      },
+      {
+        path: 'dashboard',
+        name: 'Dashboard',
+        component: () => import('@/views/dashboard/index.vue')
+      },
+      {
+        path: 'class-management',
+        name: 'ClassManagement',
+        component: () => import('@/views/classManagement/index.vue')
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/views/settings/index.vue')
+      }
+    ]
   }
 ]
 
