@@ -15,14 +15,10 @@
           <el-icon><House /></el-icon>
           <span>仪表盘</span>
         </el-menu-item>
-        <el-sub-menu index="data">
-          <template #title>
-            <el-icon><DataAnalysis /></el-icon>
-            <span>数据中心</span>
-          </template>
-          <el-menu-item index="data-list">数据列表</el-menu-item>
-          <el-menu-item index="data-report">数据报表</el-menu-item>
-        </el-sub-menu>
+        <el-menu-item index="class-management">
+          <el-icon><Category /></el-icon>
+          <span>种类管理</span>
+        </el-menu-item>
         <el-menu-item index="settings">
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
@@ -54,16 +50,11 @@
         </div>
       </el-header>
 
+<<<<<<< HEAD
       <!-- 内容区：简单路由占位或本页内容 -->
+      <!-- 内容区：显示子路由组件 -->
       <el-main class="main">
-        <div v-if="activeMenu === 'dashboard'" class="card">欢迎来到仪表盘</div>
-        <div v-else-if="activeMenu === 'data-list'" class="card">
-          <!-- 示例：内嵌现有页面 src/views/index.vue -->
-          <IndexView />
-        </div>
-        <div v-else-if="activeMenu === 'data-report'" class="card">数据报表（示例占位）</div>
-        <div v-else-if="activeMenu === 'settings'" class="card">系统设置（示例占位）</div>
-        <div v-else class="card">请选择左侧菜单</div>
+        <router-view />
       </el-main>
     </el-container>
   </el-container>
@@ -75,11 +66,11 @@
 // - 使用 Element Plus 布局组件（el-container / el-aside / el-header / el-main）
 // - 左侧菜单基于 el-menu，右侧根据 activeMenu 简单切换内容
 
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 // 引入 Element Plus 图标并在本组件中直接使用
-import { House, DataAnalysis, Setting, Expand, Fold, ArrowDown } from '@element-plus/icons-vue'
+import { House, Category, Setting, Expand, Fold, ArrowDown } from '@element-plus/icons-vue'
 
 // 当前选中的菜单项
 const activeMenu = ref('dashboard')
@@ -88,10 +79,36 @@ const activeMenu = ref('dashboard')
 const isCollapsed = ref(false)
 
 const router = useRouter()
+const route = useRoute()
 
-// 菜单选择事件：根据 index 切换右侧内容区（示例里不换路由，仅切内容）
+// 监听路由变化，更新当前激活的菜单项
+watch(() => route.path, (newPath) => {
+  const pathToMenuMap: Record<string, string> = {
+    '/main/dashboard': 'dashboard',
+    '/main/class-management': 'class-management',
+    '/main/settings': 'settings'
+  }
+  
+  const menuKey = pathToMenuMap[newPath]
+  if (menuKey) {
+    activeMenu.value = menuKey
+  }
+}, { immediate: true })
+
+// 菜单选择事件：根据 index 进行路由跳转
 function onSelectMenu(index: string) {
   activeMenu.value = index
+  // 根据菜单项进行路由跳转
+  const routeMap: Record<string, string> = {
+    'dashboard': '/main/dashboard',
+    'class-management': '/main/class-management',
+    'settings': '/main/settings'
+  }
+  
+  const targetRoute = routeMap[index]
+  if (targetRoute) {
+    router.push(targetRoute)
+  }
 }
 
 // 跳转到个人中心（示例）
@@ -144,11 +161,6 @@ function logout() {
 
 .main {
   background: #f6f7fb;
-}
-
-.card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 16px;
+  padding: 20px;
 }
 </style>

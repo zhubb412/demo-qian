@@ -38,6 +38,16 @@ service.interceptors.response.use(
       return { data }
     }
     
+    // 如果后端返回的是数字（如删除接口返回删除行数），直接返回
+    if (typeof data === 'number') {
+      return { data }
+    }
+    
+    // 如果后端返回的是字符串（如文件上传接口），直接返回
+    if (typeof data === 'string') {
+      return data
+    }
+    
     // 如果后端返回的是包装格式，按原来的逻辑处理
     // 兼容字符串和数字类型的code
     if (String(data.code) === '200' || String(data.code) === '0') {
