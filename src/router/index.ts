@@ -30,6 +30,16 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/classManagement/index.vue')
       },
       {
+        path: 'agriculture-material',
+        name: 'AgricultureMaterial',
+        component: () => import('@/views/agricultureMaterial/index.vue')
+      },
+      {
+        path: 'crop-rotation',
+        name: 'CropRotation',
+        component: () => import('@/views/cropRotation/index.vue')
+      },
+      {
         path: 'settings',
         name: 'Settings',
         component: () => import('@/views/settings/index.vue')

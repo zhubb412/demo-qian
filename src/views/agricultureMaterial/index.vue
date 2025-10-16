@@ -1,38 +1,31 @@
 <template>
-  <!-- 种类管理页面主容器 -->
+  <!-- 农资管理页面主容器 -->
   <div class="card">
     <!-- 页面标题 -->
-    <h2>种类管理</h2>
+    <h2>农资管理</h2>
     
     <!-- 搜索表单区域 -->
     <div class="search-form">
-      <!-- 种类名称搜索框 -->
+      <!-- 农资名称搜索框 -->
       <div class="search-item">
-        <label class="search-label">种类名称</label>
+        <label class="search-label">农资名称</label>
         <el-input
-          v-model="searchForm.className"
-          placeholder="请输入种类名称"
+          v-model="searchForm.materialName"
+          placeholder="请输入农资名称"
           clearable
           style="width: 200px"
         />
       </div>
       
-      <!-- 种类类型选择框 -->
+      <!-- 农资编码搜索框 -->
       <div class="search-item">
-        <label class="search-label">种类类型</label>
-        <el-select
-          v-model="searchForm.classType"
-          placeholder="请选择种类类型"
+        <label class="search-label">农资编码</label>
+        <el-input
+          v-model="searchForm.materialCode"
+          placeholder="请输入农资编码"
           clearable
           style="width: 200px"
-        >
-          <el-option
-            v-for="type in classTypes"
-            :key="type"
-            :label="type"
-            :value="type"
-          />
-        </el-select>
+        />
       </div>
       
       <!-- 搜索按钮 -->
@@ -44,23 +37,23 @@
       <el-button :icon="Refresh" @click="handleReset">
         重置
       </el-button>
-      <!-- 新增种类按钮 -->
-    <el-button type="primary" @click="showAddDialog">新增种类</el-button>
+      <!-- 新增农资按钮 -->
+    <el-button type="primary" @click="showAddDialog">新增农资</el-button>
     </div>
     
 
-    <!-- 种类列表卡片展示 -->
+    <!-- 农资列表卡片展示 -->
     <div class="categories-grid">
       <div 
-        v-for="category in categories" 
-        :key="category.classId" 
+        v-for="material in materials" 
+        :key="material.materialId" 
         class="category-card"
       >
-        <!-- 种类图片区域 -->
+        <!-- 农资图片区域 -->
         <div class="card-image">
           <el-image 
-            v-if="category.classImage" 
-            :src="category.classImage" 
+            v-if="material.materialImage" 
+            :src="material.materialImage" 
             class="category-image"
             fit="cover"
           />
@@ -78,59 +71,59 @@
           <!-- 详细信息 -->
           <div class="card-details">
 
-            <!-- 种类名称 -->
+            <!-- 农资编码 -->
             <div class="detail-item">
               <el-icon class="detail-icon">
                 <Grid />
               </el-icon>
-              <span class="detail-label">种类名称:</span>
-              <span class="detail-value">{{ category.className }}</span>
+              <span class="detail-label">农资编码:</span>
+              <span class="detail-value">{{ material.materialCode }}</span>
             </div>
             
-            <!-- 种类类型 -->
+            <!-- 农资名称 -->
             <div class="detail-item">
               <el-icon class="detail-icon">
                 <Grid />
               </el-icon>
-              <span class="detail-label">种类类型:</span>
-              <span class="detail-value">{{ category.classType }}</span>
+              <span class="detail-label">农资名称:</span>
+              <span class="detail-value">{{ material.materialName }}</span>
             </div>
             
-            <!-- 适配作物 -->
-            <div class="detail-item">
+            <!-- 计量单位 -->
+            <div v-if="material.measureUnit" class="detail-item">
               <el-icon class="detail-icon">
                 <Grid />
               </el-icon>
-              <span class="detail-label">适配作物:</span>
-              <span class="detail-value">{{ category.classAdapt }}</span>
+              <span class="detail-label">计量单位:</span>
+              <span class="detail-value">{{ material.measureUnit }}</span>
             </div>
             
             <!-- 创建时间 -->
-            <div class="detail-item">
+            <div v-if="material.createTime" class="detail-item">
               <el-icon class="detail-icon">
                 <Calendar />
               </el-icon>
               <span class="detail-label">创建时间:</span>
-              <span class="detail-value">{{ category.createTime }}</span>
+              <span class="detail-value">{{ material.createTime }}</span>
             </div>
             
             <!-- 备注信息 -->
-            <div v-if="category.remark" class="detail-item">
+            <div v-if="material.remark" class="detail-item">
               <el-icon class="detail-icon">
                 <Document />
               </el-icon>
               <span class="detail-label">备注:</span>
-              <span class="detail-value">{{ category.remark }}</span>
+              <span class="detail-value">{{ material.remark }}</span>
             </div>
           </div>
         </div>
         
         <!-- 卡片操作按钮 -->
         <div class="card-actions">
-          <el-button type="primary" size="small" :icon="Edit" @click="showEditDialog(category)">
+          <el-button type="primary" size="small" :icon="Edit" @click="showEditDialog(material)">
             编辑
           </el-button>
-          <el-button type="danger" size="small" :icon="Delete" @click="deleteCategory(category.classId)">
+          <el-button type="danger" size="small" :icon="Delete" @click="deleteMaterial(material.materialId)">
             删除
           </el-button>
         </div>
@@ -154,9 +147,9 @@
       />
     </div>
 
-    <!-- 新增/编辑种类对话框 -->
+    <!-- 新增/编辑农资对话框 -->
     <el-dialog 
-      :title="isEditMode ? '编辑种类' : '新增种类'" 
+      :title="isEditMode ? '编辑农资' : '新增农资'" 
       v-model="dialogVisible" 
       width="600px"
       :before-close="handleClose"
@@ -167,20 +160,29 @@
         ref="formRef" 
         label-width="100px"
       >
-        <!-- 种类名称 -->
-        <el-form-item label="种类名称" prop="className">
+        <!-- 农资编码 -->
+        <el-form-item label="农资编码" prop="materialCode">
           <el-input 
-            v-model="formData.className" 
-            placeholder="请输入种类名称"
+            v-model="formData.materialCode" 
+            placeholder="请输入农资编码"
             clearable
           />
         </el-form-item>
         
-        <!-- 种类类型 -->
-        <el-form-item label="种类类型" prop="classType">
+        <!-- 农资名称 -->
+        <el-form-item label="农资名称" prop="materialName">
           <el-input 
-            v-model="formData.classType" 
-            placeholder="请输入种类类型"
+            v-model="formData.materialName" 
+            placeholder="请输入农资名称"
+            clearable
+          />
+        </el-form-item>
+        
+        <!-- 计量单位 -->
+        <el-form-item label="计量单位" prop="measureUnit">
+          <el-input 
+            v-model="formData.measureUnit" 
+            placeholder="请输入计量单位"
             clearable
           />
         </el-form-item>
@@ -196,15 +198,6 @@
             style="width: 100%"
           />
         </el-form-item>
-
-            <!-- 适配作物 -->
-            <el-form-item label="适配作物" prop="classType">
-          <el-input 
-            v-model="formData.classAdapt" 
-            placeholder="请输入适配作物"
-            clearable
-          />
-        </el-form-item>
         
         <!-- 备注 -->
         <el-form-item label="备注" prop="remark">
@@ -217,7 +210,7 @@
         </el-form-item>
         
         <!-- 上传图片 -->
-        <el-form-item label="种类图片" prop="classImage">
+        <el-form-item label="农资图片" prop="materialImage">
           <el-upload
             class="image-uploader"
             :show-file-list="false"
@@ -226,7 +219,7 @@
             :http-request="customUpload"
             :auto-upload="true"
           >
-            <img v-if="formData.classImage" :src="getImagePreviewUrl(formData.classImage)" class="uploaded-image" />
+            <img v-if="formData.materialImage" :src="getImagePreviewUrl(formData.materialImage)" class="uploaded-image" />
             <div v-else class="upload-placeholder">
               <div class="upload-icon">+</div>
               <div class="upload-text">点击上传图片</div>
@@ -253,22 +246,22 @@
 import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Picture, Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus } from '@element-plus/icons-vue';
-import { classManagementList, type CategoryItem, type PaginationResult } from '@/api/classManagementApi';
+import { agricultureMaterialList, type AgricultureMaterialItem, type PaginationResult } from '@/api/agricultureMaterialApi';
 
 // 使用API中定义的接口类型
-type Category = CategoryItem;
+type Material = AgricultureMaterialItem;
 
 /**
- * 种类管理组件
- * 提供种类的增删改查功能
+ * 农资管理组件
+ * 提供农资的增删改查功能
  */
 export default {
-  name: 'CategoryManager',
+  name: 'AgricultureMaterialManager',
   setup() {
     // 响应式数据定义
     
-    /** 种类列表数据 */
-    const categories = ref<Category[]>([]);
+    /** 农资列表数据 */
+    const materials = ref<Material[]>([]);
     
     /** 分页信息 */
     const pagination = ref({
@@ -280,12 +273,9 @@ export default {
     
     /** 搜索表单数据 */
     const searchForm = ref({
-      className: '', // 种类名称
-      classType: ''  // 种类类型
+      materialName: '', // 农资名称
+      materialCode: ''  // 农资编码
     });
-    
-    /** 种类类型选项列表 */
-    const classTypes = ref<string[]>([]);
     
     /** 对话框显示状态 */
     const dialogVisible = ref(false);
@@ -301,40 +291,44 @@ export default {
     
     /** 表单数据 */
     const formData = ref({
-      className: '',
-      classType: '',
+      materialCode: '',
+      materialName: '',
+      measureUnit: '',
       createTime: '',
       remark: '',
-      classImage: '',
-      classAdapt: ''
+      materialImage: ''
     });
     
     /** 表单验证规则 */
     const formRules = {
-      className: [
-        { required: true, message: '请输入种类名称', trigger: 'blur' }
+      materialCode: [
+        { required: true, message: '请输入农资编码', trigger: 'blur' }
       ],
-      classType: [
-        { required: true, message: '请输入种类类型', trigger: 'blur' }
+      materialName: [
+        { required: true, message: '请输入农资名称', trigger: 'blur' }
+      ],
+      measureUnit: [
+        { required: true, message: '请输入计量单位', trigger: 'blur' }
       ],
       createTime: [
         { required: true, message: '请选择创建时间', trigger: 'change' }
       ]
     };
     
-    /** 当前编辑的种类数据 */
-    const currentCategory = ref<Category>({
-      classId: 0,
-      className: '',
-      classType: '',
-      classImage: null,
-      classAdapt: null,
+    /** 当前编辑的农资数据 */
+    const currentMaterial = ref<Material>({
+      materialId: 0,
+      materialCode: '',
+      materialName: '',
+      materialImage: null,
+      measureUnit: null,
       remark: null,
-      createTime: '',
+      createTime: null,
       createBy: null,
       updateBy: null,
       updateTime: null,
-      status: null
+      status: null,
+      orderNum: null
     });
     
 
@@ -342,20 +336,20 @@ export default {
      * 准备搜索参数
      */
     const getSearchParams = () => {
-      const params: { className?: string; classType?: string } = {};
-      if (searchForm.value.className.trim()) {
-        params.className = searchForm.value.className.trim();
+      const params: { materialName?: string; materialCode?: string } = {};
+      if (searchForm.value.materialName.trim()) {
+        params.materialName = searchForm.value.materialName.trim();
       }
-      if (searchForm.value.classType.trim()) {
-        params.classType = searchForm.value.classType.trim();
+      if (searchForm.value.materialCode.trim()) {
+        params.materialCode = searchForm.value.materialCode.trim();
       }
       return params;
     };
 
     /**
-     * 获取种类列表数据
+     * 获取农资列表数据
      */
-    const fetchCategories = async (page: number = pagination.value.current, pageSize: number = pagination.value.size) => {
+    const fetchMaterials = async (page: number = pagination.value.current, pageSize: number = pagination.value.size) => {
       try {
         const params = {
           ...getSearchParams(),
@@ -364,11 +358,11 @@ export default {
         };
         
         console.log('请求参数:', params);
-        const response = await classManagementList.listclassManagement(params);
+        const response = await agricultureMaterialList.listagricultureMaterial(params);
         console.log('API响应:', response);
         
         if (response && response.records) {
-          categories.value = response.records || [];
+          materials.value = response.records || [];
           pagination.value = {
             current: response.current,
             size: response.size,
@@ -376,16 +370,12 @@ export default {
             pages: response.pages
           };
         } else {
-          categories.value = [];
+          materials.value = [];
           pagination.value = { current: 1, size: 8, total: 0, pages: 0 };
         }
-        
-        // 提取种类类型用于下拉选择
-        const types = [...new Set(categories.value.map(cat => cat.classType))];
-        classTypes.value = types.filter(type => type);
       } catch (error) {
-        console.error('获取种类列表失败:', error);
-        ElMessage.error('获取种类列表失败');
+        console.error('获取农资列表失败:', error);
+        ElMessage.error('获取农资列表失败');
       }
     };
 
@@ -394,20 +384,20 @@ export default {
      */
     const handleSearch = () => {
       pagination.value.current = 1;
-      fetchCategories(1, pagination.value.size);
+      fetchMaterials(1, pagination.value.size);
     };
 
     /**
      * 重置搜索条件
      */
     const handleReset = () => {
-      searchForm.value = { className: '', classType: '' };
+      searchForm.value = { materialName: '', materialCode: '' };
       pagination.value.current = 1;
-      fetchCategories(1, pagination.value.size);
+      fetchMaterials(1, pagination.value.size);
     };
 
     /**
-     * 显示新增种类对话框
+     * 显示新增农资对话框
      */
     const showAddDialog = () => {
       // 设置为新增模式
@@ -415,12 +405,12 @@ export default {
       
       // 重置表单数据
       formData.value = {
-        className: '',
-        classType: '',
+        materialCode: '',
+        materialName: '',
+        measureUnit: '',
         createTime: '',
         remark: '',
-        classImage: '',
-        classAdapt: ''
+        materialImage: ''
       };
       
       // 显示对话框
@@ -428,24 +418,24 @@ export default {
     };
 
     /**
-     * 显示编辑种类对话框
-     * @param category 要编辑的种类数据
+     * 显示编辑农资对话框
+     * @param material 要编辑的农资数据
      */
-    const showEditDialog = (category: Category) => {
+    const showEditDialog = (material: Material) => {
       // 设置为编辑模式
       isEditMode.value = true;
       
-      // 设置当前编辑的种类
-      currentCategory.value = { ...category };
+      // 设置当前编辑的农资
+      currentMaterial.value = { ...material };
       
       // 填充表单数据
       formData.value = {
-        className: category.className,
-        classType: category.classType,
-        createTime: category.createTime,
-        remark: category.remark || '',
-        classImage: category.classImage || '',
-        classAdapt: category.classAdapt || ''
+        materialCode: material.materialCode,
+        materialName: material.materialName,
+        measureUnit: material.measureUnit || '',
+        createTime: material.createTime || '',
+        remark: material.remark || '',
+        materialImage: material.materialImage || ''
       };
       
       // 显示对话框
@@ -466,19 +456,20 @@ export default {
     /**
      * 准备提交数据
      */
-    const prepareSubmitData = (): CategoryItem => {
+    const prepareSubmitData = (): AgricultureMaterialItem => {
       return {
-        classId: 0,
-        className: formData.value.className,
-        classType: formData.value.classType,
-        classImage: formData.value.classImage || null,
-        classAdapt: formData.value.classAdapt || null,
+        materialId: 0,
+        materialCode: formData.value.materialCode,
+        materialName: formData.value.materialName,
+        materialImage: formData.value.materialImage || null,
+        measureUnit: formData.value.measureUnit || null,
         remark: formData.value.remark || null,
         createTime: formData.value.createTime,
         createBy: null,
         updateBy: null,
         updateTime: null,
-        status: null
+        status: null,
+        orderNum: null
       };
     };
 
@@ -501,25 +492,25 @@ export default {
           // 编辑模式：调用更新API
           const updateData = {
             ...submitData,
-            classId: currentCategory.value.classId
+            materialId: currentMaterial.value.materialId
           };
-          await classManagementList.editclassManagement(updateData);
-          ElMessage.success('编辑种类成功');
+          await agricultureMaterialList.editagricultureMaterial(updateData);
+          ElMessage.success('编辑农资成功');
         } else {
           // 新增模式：调用新增API
-          await classManagementList.addclassManagement(submitData);
-          ElMessage.success('新增种类成功');
+          await agricultureMaterialList.addagricultureMaterial(submitData);
+          ElMessage.success('新增农资成功');
         }
         
         // 操作成功后刷新列表
-        await fetchCategories(pagination.value.current, pagination.value.size);
+        await fetchMaterials(pagination.value.current, pagination.value.size);
         
         // 关闭对话框
         handleClose();
         
       } catch (error) {
         console.error('操作失败:', error);
-        const errorMessage = isEditMode.value ? '编辑失败，请重试' : '新增失败，请重试';
+        const errorMessage = isEditMode.value ? '编辑农资失败，请重试' : '新增农资失败，请重试';
         ElMessage.error(errorMessage);
       } finally {
         submitLoading.value = false;
@@ -534,13 +525,13 @@ export default {
       
       try {
         // 调用文件上传接口
-        const response = await classManagementList.uploadFile(file);
+        const response = await agricultureMaterialList.uploadFile(file);
         
         // 构造访问URL
         const imageUrl = `http://localhost:8080/uploads/${file.name}`;
         
         // 保存图片URL到表单数据
-        formData.value.classImage = imageUrl;
+        formData.value.materialImage = imageUrl;
         
         onSuccess(response);
         ElMessage.success('图片上传成功');
@@ -600,28 +591,28 @@ export default {
 
 
     /**
-     * 删除种类
-     * @param id 要删除的种类ID
+     * 删除农资
+     * @param id 要删除的农资ID
      */
-    const deleteCategory = async (id: number) => {
+    const deleteMaterial = async (id: number) => {
       try {
-        // 调用后端API删除种类
-        await classManagementList.deleteclassManagement(id);
+        // 调用后端API删除农资
+        await agricultureMaterialList.deleteagricultureMaterial(id);
         
-        // 删除成功后从列表中移除该种类
-        categories.value = categories.value.filter(cat => cat.classId !== id);
+        // 删除成功后从列表中移除该农资
+        materials.value = materials.value.filter(mat => mat.materialId !== id);
         
         // 显示删除成功提示
         ElMessage.success('删除成功');
         
         // 如果当前页没有数据了且不是第一页，则跳转到上一页
-        if (categories.value.length === 0 && pagination.value.current > 1) {
+        if (materials.value.length === 0 && pagination.value.current > 1) {
           pagination.value.current -= 1;
         }
         // 刷新当前页数据
-        await fetchCategories(pagination.value.current, pagination.value.size);
+        await fetchMaterials(pagination.value.current, pagination.value.size);
       } catch (error) {
-        console.error('删除种类失败:', error);
+        console.error('删除农资失败:', error);
         ElMessage.error('删除失败，请重试');
       }
     };
@@ -632,7 +623,7 @@ export default {
     const handlePageChange = async (page: number) => {
       console.log('分页变化:', page);
       pagination.value.current = page;
-      await fetchCategories(page, pagination.value.size);
+      await fetchMaterials(page, pagination.value.size);
     };
 
     /**
@@ -641,26 +632,25 @@ export default {
     const handleSizeChange = async (size: number) => {
       pagination.value.current = 1;
       pagination.value.size = size;
-      await fetchCategories(1, size);
+      await fetchMaterials(1, size);
     };
 
     // 组件初始化时加载数据
-    fetchCategories();
+    fetchMaterials();
 
     // 返回组件需要的数据和方法
     return {
-      categories,
+      materials,
       pagination,
       searchForm,
-      classTypes,
-      currentCategory,
+      currentMaterial,
       dialogVisible,
       isEditMode,
       formRef,
       submitLoading,
       formData,
       formRules,
-      fetchCategories,
+      fetchMaterials,
       handleSearch,
       handleReset,
       showAddDialog,
@@ -673,7 +663,7 @@ export default {
       handleImageSuccess,
       getImagePreviewUrl,
       beforeImageUpload,
-      deleteCategory,
+      deleteMaterial,
       handlePageChange,
       handleSizeChange,
       // 图标组件

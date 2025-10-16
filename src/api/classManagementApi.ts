@@ -1,12 +1,18 @@
 import request from '@/utils/http'
 import type { BaseResult, BaseArrayResult } from '@/types/axios'
 
+/**
+ * 种类信息管理
+ */
+
+
 // 种类管理接口
 export interface CategoryItem {
     classId: number;
     className: string;
     classType: string;
     classImage: string | null;
+    classAdapt: string | null;
     remark: string | null;
     createTime: string;
     createBy: string | null;
@@ -62,13 +68,6 @@ export class classManagementList {
         })
     }
 
-    //获取种类详情
-    static getclassManagement(classId: number) {
-        return request.get<BaseResult<CategoryItem>>({
-            url: `/cropClass/get/${classId}`
-        })
-    }
-
     //上传文件
     static uploadFile(file: File) {
         const formData = new FormData()
@@ -76,6 +75,7 @@ export class classManagementList {
         return request.post<string>({
             url: '/api/files/upload',
             data: formData,
+            //设置请求头，指明请求体的内容类型为multipart/form-data
             headers: {
                 'Content-Type': 'multipart/form-data'
             }

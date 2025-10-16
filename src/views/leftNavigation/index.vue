@@ -19,6 +19,14 @@
           <el-icon><Category /></el-icon>
           <span>种类管理</span>
         </el-menu-item>
+        <el-menu-item index="crop-rotation">
+          <el-icon><Grid /></el-icon>
+          <span>作物轮作计划</span>
+        </el-menu-item>
+        <el-menu-item index="agriculture-material">
+          <el-icon><Crop /></el-icon>
+          <span>农资管理</span>
+        </el-menu-item>
         <el-menu-item index="settings">
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
@@ -68,7 +76,7 @@ import { ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 // 引入 Element Plus 图标并在本组件中直接使用
-import { House, Setting, Expand, Fold, ArrowDown } from '@element-plus/icons-vue'
+import { House, Setting, Expand, Fold, ArrowDown, Crop, Grid } from '@element-plus/icons-vue'
 
 // 当前选中的菜单项
 const activeMenu = ref('dashboard')
@@ -84,6 +92,8 @@ watch(() => route.path, (newPath) => {
   const pathToMenuMap: Record<string, string> = {
     '/main/dashboard': 'dashboard',
     '/main/class-management': 'class-management',
+    '/main/agriculture-material': 'agriculture-material',
+    '/main/crop-rotation': 'crop-rotation',
     '/main/settings': 'settings'
   }
   
@@ -100,6 +110,8 @@ function onSelectMenu(index: string) {
   const routeMap: Record<string, string> = {
     'dashboard': '/main/dashboard',
     'class-management': '/main/class-management',
+    'agriculture-material': '/main/agriculture-material',
+    'crop-rotation': '/main/crop-rotation',
     'settings': '/main/settings'
   }
   
