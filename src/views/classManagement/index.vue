@@ -104,6 +104,22 @@
               <span class="detail-label">适配作物:</span>
               <span class="detail-value">{{ category.classAdapt }}</span>
             </div>
+
+            <div class="detail-item">
+              <el-icon class="detail-icon">
+                <Grid />
+              </el-icon>
+              <span class="detail-label">适合种植月份:</span>
+              <span class="detail-value">{{ category.classPlanting }}</span>
+            </div>
+
+            <div class="detail-item">
+              <el-icon class="detail-icon">
+                <Grid />
+              </el-icon>
+              <span class="detail-label">适合收获月份:</span>
+              <span class="detail-value">{{ category.classHarvest }}</span>
+            </div>
             
             <!-- 创建时间 -->
             <div class="detail-item">
@@ -165,7 +181,8 @@
         :model="formData" 
         :rules="formRules" 
         ref="formRef" 
-        label-width="100px"
+        label-width="120px"
+        :hide-required-asterisk="true"
       >
         <!-- 种类名称 -->
         <el-form-item label="种类名称" prop="className">
@@ -206,6 +223,40 @@
           />
         </el-form-item>
         
+        <!-- 适合种植月份 -->
+        <el-form-item label="适合种植月份" prop="classPlanting">
+          <el-select 
+            v-model="formData.classPlanting" 
+            placeholder="请选择适合种植月份"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="month in monthOptions"
+              :key="month.value"
+              :label="month.label"
+              :value="month.value"
+            />
+          </el-select>
+        </el-form-item>
+        
+        <!-- 适合收获月份 -->
+        <el-form-item label="适合收获月份" prop="classHarvest">
+          <el-select 
+            v-model="formData.classHarvest" 
+            placeholder="请选择适合收获月份"
+            clearable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="month in monthOptions"
+              :key="month.value"
+              :label="month.label"
+              :value="month.value"
+            />
+          </el-select>
+        </el-form-item>
+
         <!-- 备注 -->
         <el-form-item label="备注" prop="remark">
           <el-input 
@@ -219,17 +270,17 @@
         <!-- 上传图片 -->
         <el-form-item label="种类图片" prop="classImage">
           <el-upload
-            class="image-uploader"
+            class="image-uploader-full"
             :show-file-list="false"
             :on-change="handleImageChange"
             :before-upload="beforeImageUpload"
             :http-request="customUpload"
             :auto-upload="true"
           >
-            <img v-if="formData.classImage" :src="getImagePreviewUrl(formData.classImage)" class="uploaded-image" />
-            <div v-else class="upload-placeholder">
-              <div class="upload-icon">+</div>
-              <div class="upload-text">点击上传图片</div>
+            <img v-if="formData.classImage" :src="getImagePreviewUrl(formData.classImage)" class="uploaded-image-full" />
+            <div v-else class="upload-placeholder-full">
+              <div class="upload-icon-full">+</div>
+              <div class="upload-text-full">点击上传图片</div>
             </div>
           </el-upload>
           <div class="upload-tip">支持jpg、png格式，文件大小不超过2MB</div>
@@ -287,6 +338,22 @@ export default {
     /** 种类类型选项列表 */
     const classTypes = ref<string[]>([]);
     
+    /** 月份选项列表 */
+    const monthOptions = ref([
+      { label: '一月', value: '一月' },
+      { label: '二月', value: '二月' },
+      { label: '三月', value: '三月' },
+      { label: '四月', value: '四月' },
+      { label: '五月', value: '五月' },
+      { label: '六月', value: '六月' },
+      { label: '七月', value: '七月' },
+      { label: '八月', value: '八月' },
+      { label: '九月', value: '九月' },
+      { label: '十月', value: '十月' },
+      { label: '十一月', value: '十一月' },
+      { label: '十二月', value: '十二月' }
+    ]);
+    
     /** 对话框显示状态 */
     const dialogVisible = ref(false);
     
@@ -306,7 +373,9 @@ export default {
       createTime: '',
       remark: '',
       classImage: '',
-      classAdapt: ''
+      classAdapt: '',
+      classPlanting: '',
+      classHarvest: ''
     });
     
     /** 表单验证规则 */
@@ -319,6 +388,12 @@ export default {
       ],
       createTime: [
         { required: true, message: '请选择创建时间', trigger: 'change' }
+      ],
+      classPlanting: [
+        { required: true, message: '请选择适合种植月份', trigger: 'change' }
+      ],
+      classHarvest: [
+        { required: true, message: '请选择适合收获月份', trigger: 'change' }
       ]
     };
     
@@ -329,6 +404,8 @@ export default {
       classType: '',
       classImage: null,
       classAdapt: null,
+      classPlanting: null,
+      classHarvest: null,
       remark: null,
       createTime: '',
       createBy: null,
@@ -420,7 +497,9 @@ export default {
         createTime: '',
         remark: '',
         classImage: '',
-        classAdapt: ''
+        classAdapt: '',
+        classPlanting: '',
+        classHarvest: ''
       };
       
       // 显示对话框
@@ -445,7 +524,9 @@ export default {
         createTime: category.createTime,
         remark: category.remark || '',
         classImage: category.classImage || '',
-        classAdapt: category.classAdapt || ''
+        classAdapt: category.classAdapt || '',
+        classPlanting: category.classPlanting || '',
+        classHarvest: category.classHarvest || ''
       };
       
       // 显示对话框
@@ -473,6 +554,8 @@ export default {
         classType: formData.value.classType,
         classImage: formData.value.classImage || null,
         classAdapt: formData.value.classAdapt || null,
+        classPlanting: formData.value.classPlanting || null,
+        classHarvest: formData.value.classHarvest || null,
         remark: formData.value.remark || null,
         createTime: formData.value.createTime,
         createBy: null,
@@ -653,6 +736,7 @@ export default {
       pagination,
       searchForm,
       classTypes,
+      monthOptions,
       currentCategory,
       dialogVisible,
       isEditMode,
@@ -813,6 +897,84 @@ h2 {
   font-size: 12px;
   color: #999;
   margin-top: 8px;
+}
+
+/* 撑满整行的图片上传样式 */
+.image-uploader-full {
+  width: 100%;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-uploader-full:hover {
+  border-color: #409eff;
+}
+
+/* 确保整个上传区域都可以点击 */
+.image-uploader-full :deep(.el-upload) {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 撑满整行的上传占位符样式 */
+.upload-placeholder-full {
+  width: 100%;
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #d9d9d9;
+  border-radius: 6px;
+  background-color: #fafafa;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.upload-placeholder-full:hover {
+  border-color: #409eff;
+  background-color: #f5f7fa;
+}
+
+.upload-icon-full {
+  font-size: 48px;
+  color: #8c939d;
+  margin-bottom: 8px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+.upload-text-full {
+  font-size: 14px;
+  color: #8c939d;
+}
+
+.uploaded-image-full {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+/* 表单标签样式 - 防止文字换行并左对齐 */
+:deep(.el-form-item__label) {
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
+  min-width: 120px;
+  text-align: left !important;
+  justify-content: flex-start !important;
 }
 
 /* 卡片网格布局 */

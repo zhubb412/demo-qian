@@ -13,6 +13,8 @@ export interface CategoryItem {
     classType: string;
     classImage: string | null;
     classAdapt: string | null;
+    classPlanting: string | null;
+    classHarvest: string | null;
     remark: string | null;
     createTime: string;
     createBy: string | null;

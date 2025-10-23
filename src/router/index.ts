@@ -40,6 +40,11 @@ const routes: Array<RouteRecordRaw> = [
         component: () => import('@/views/cropRotation/index.vue')
       },
       {
+        path: 'farm-plot',
+        name: 'FarmPlot',
+        component: () => import('@/views/farmPlot/index.vue')
+      },
+      {
         path: 'settings',
         name: 'Settings',
         component: () => import('@/views/settings/index.vue')

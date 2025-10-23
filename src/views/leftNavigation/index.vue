@@ -23,6 +23,10 @@
           <el-icon><Grid /></el-icon>
           <span>作物轮作计划</span>
         </el-menu-item>
+        <el-menu-item index="farm-plot">
+          <el-icon><MapLocation /></el-icon>
+          <span>地块管理</span>
+        </el-menu-item>
         <el-menu-item index="agriculture-material">
           <el-icon><Crop /></el-icon>
           <span>农资管理</span>
@@ -76,7 +80,7 @@ import { ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 // 引入 Element Plus 图标并在本组件中直接使用
-import { House, Setting, Expand, Fold, ArrowDown, Crop, Grid } from '@element-plus/icons-vue'
+import { House, Setting, Expand, Fold, ArrowDown, Crop, Grid, MapLocation } from '@element-plus/icons-vue'
 
 // 当前选中的菜单项
 const activeMenu = ref('dashboard')
@@ -94,6 +98,7 @@ watch(() => route.path, (newPath) => {
     '/main/class-management': 'class-management',
     '/main/agriculture-material': 'agriculture-material',
     '/main/crop-rotation': 'crop-rotation',
+    '/main/farm-plot': 'farm-plot',
     '/main/settings': 'settings'
   }
   
@@ -112,6 +117,7 @@ function onSelectMenu(index: string) {
     'class-management': '/main/class-management',
     'agriculture-material': '/main/agriculture-material',
     'crop-rotation': '/main/crop-rotation',
+    'farm-plot': '/main/farm-plot',
     'settings': '/main/settings'
   }
   
