@@ -6,6 +6,8 @@ export interface FarmPlotItem {
     farmplotId: number;
     rotationId: number;
     farmplotName: string;
+    farmplotZuowu: string;
+    farmplotLunzuowu: string;
     farmplotCount: number | null;       
     farmplotArea: number | null;         
     farmplotShengarea: number | null;    
@@ -26,6 +28,19 @@ export interface PaginationResult<T> {
     size: number;
     current: number;
     pages: number;
+}
+
+//listDTO返回的数据结构
+export interface FarmPlotDTOItem {
+    classId: number;
+    rotationId1: number;
+    rotationId2: number;
+    classPlanting: string;
+    classHarvest: string;
+    className: string;
+    classAdapt: string;
+    rotationName: string;
+    rotationImage: string;
 }
 
 //获取所有地块 模糊查询一起 支持分页
@@ -63,4 +78,11 @@ export class farmPlotList {
             data
         })
     }
+    
+    static listDTO(){
+        return request.get<PaginationResult<FarmPlotDTOItem>>({
+            url: '/farmPlot/listDTO'
+        })
+    }
+    
 }

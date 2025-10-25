@@ -94,7 +94,25 @@
                 <span class="detail-label">轮作计划:</span>
                 <span class="detail-value">{{ getRotationPlanName(category.rotationId) }}</span>
               </div>
- 
+
+              <!-- 适合种植作物 -->
+              <div class="detail-item">
+                <el-icon class="detail-icon">
+                  <Grid />
+                </el-icon>
+                <span class="detail-label">适合种植作物:</span>
+                <span class="detail-value">{{ category.farmplotZuowu }}</span>
+              </div>
+
+              <!-- 轮作物 -->
+              <div class="detail-item">
+                <el-icon class="detail-icon">
+                  <Grid />
+                </el-icon>
+                <span class="detail-label">轮作物:</span>
+                <span class="detail-value">{{ category.farmplotLunzuowu }}</span>
+              </div>
+
               <!-- 地块面积 -->
               <div class="detail-item">
                 <el-icon class="detail-icon">
@@ -203,20 +221,38 @@
               placeholder="请选择轮作计划"
               clearable
               style="width: 100%"
+              @change="handleRotationChange"
             >
-              <!-- 遍历轮作计划列表，显示计划名称，值为计划ID -->
+              <!-- 遍历轮作计划列表，显示计划名称，值为classId -->
               <el-option
                 v-for="plan in rotationPlans"
-                :key="plan.id"
+                :key="plan.classId"
                 :label="plan.rotationName"
-                :value="plan.id"
+                :value="plan.classId"
               />
             </el-select>
           </el-form-item>
+
+          <!-- 种植作物 -->
+          <el-form-item label="适合种植作物" prop="farmplotZuowu">
+            <el-input 
+              v-model="formData.farmplotZuowu" 
+              placeholder="根据选择的轮作计划自动填充"
+              readonly
+              style="width: 100%"
+            />
+          </el-form-item>
+
+          <!-- 轮作作物 - 隐藏字段，不显示在界面上 -->
+          <el-form-item v-show="false" prop="farmplotLunzuowu">
+            <el-input v-model="formData.farmplotLunzuowu" />
+          </el-form-item>
+
+
           
           
           <!-- 农场总面积 -->
-          <el-form-item label="农场总面积" prop="farmplotCount">
+          <el-form-item v-if="showFarmTotalArea" label="农场总面积" prop="farmplotCount">
             <el-input 
               v-model.number="formData.farmplotCount" 
               type="number"
@@ -243,7 +279,7 @@
               v-model="formData.farmplotShengarea" 
               placeholder=""
               readonly
-              disabled
+        
             />
           </el-form-item>
           
@@ -346,8 +382,7 @@
   import { ref, watch, computed } from 'vue';
   import { ElMessage } from 'element-plus';
   import { Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus, MapLocation, Picture } from '@element-plus/icons-vue';
-  import { farmPlotList, type FarmPlotItem, type PaginationResult } from '@/api/farmPlotApi';
-  import { cropRotationList, type CropRotationItem } from '@/api/cropRotationApi';
+  import { farmPlotList, type FarmPlotItem, type PaginationResult, type FarmPlotDTOItem } from '@/api/farmPlotApi';
   
   // 使用API中定义的接口类型
   type Category = FarmPlotItem;
@@ -365,7 +400,7 @@
       const categories = ref<Category[]>([]);
       
       /** 轮作计划列表数据 - 用于下拉选择 */
-      const rotationPlans = ref<CropRotationItem[]>([]);
+      const rotationPlans = ref<FarmPlotDTOItem[]>([]);
       
       /** 分页信息 */
       const pagination = ref({
@@ -427,8 +462,27 @@
        */
       const getRotationPlanName = (rotationId: number | string | null) => {
         if (!rotationId) return null;
-        const plan = rotationPlans.value.find(p => p.id === Number(rotationId));
+        const plan = rotationPlans.value.find(p => p.classId === Number(rotationId));
         return plan ? plan.rotationName : null;
+      };
+
+      /**
+       * 处理轮作计划变化，自动填充适合种植作物和轮作作物
+       */
+      const handleRotationChange = (rotationId: number | null) => {
+        if (rotationId) {
+          const selectedPlan = rotationPlans.value.find(plan => plan.classId === rotationId);
+          if (selectedPlan) {
+            formData.value.farmplotZuowu = selectedPlan.className; // 适合种植作物
+            formData.value.farmplotLunzuowu = selectedPlan.classAdapt; // 轮作作物（隐藏字段）
+          } else {
+            formData.value.farmplotZuowu = '';
+            formData.value.farmplotLunzuowu = '';
+          }
+        } else {
+          formData.value.farmplotZuowu = '';
+          formData.value.farmplotLunzuowu = '';
+        }
       };
       
       /** 表单数据 */
@@ -442,7 +496,9 @@
         createTime: '',
         remark: '',
         rotationId: null as number | null,  // 轮作计划ID - 关联到轮作计划表
-        farmplotImage: null as string | null // 地块图片，根据选择的轮作计划自动填充
+        farmplotImage: null as string | null, // 地块图片，根据选择的轮作计划自动填充
+        farmplotZuowu: '', // 种植作物
+        farmplotLunzuowu: '', // 轮作作物
       });
       
       /** 表单验证规则 */
@@ -519,6 +575,8 @@
         farmplotId: 0,
         rotationId: 0,
         farmplotName: '',
+        farmplotZuowu: '',
+        farmplotLunzuowu: '',
         farmplotCount: 0,        
         farmplotArea: 0,         
         farmplotShengarea: 0,    
@@ -535,29 +593,28 @@
   
       /**
        * 计算剩余面积
-       * 根据是否有现有地块采用不同的计算逻辑
+       * 新增时：如果有现有地块，用数据库剩余面积减去新地块面积
+       * 新增时：如果没有现有地块，用农场总面积减去地块面积
+       * 编辑时：用农场总面积减去地块面积
        */
       const shengyuArea = () => {
         const totalArea = formData.value.farmplotCount;
         const plotArea = formData.value.farmplotArea;
         
-        // 如果已有地块，使用现有地块的剩余面积减去新地块面积
-        // 逻辑：新剩余面积 = 现有地块剩余面积 - 新输入的地块面积
-        if (categories.value.length > 0 && plotArea) {
-          const existingRemainingArea = categories.value[0].farmplotShengarea; // 获取现有地块的剩余面积
-          const newPlotArea = Number(plotArea); // 转换新地块面积为数字
-          if (!isNaN(newPlotArea) && existingRemainingArea) {
-            const newRemaining = existingRemainingArea - newPlotArea; // 计算新的剩余面积
-            formData.value.farmplotShengarea = Math.max(0, newRemaining); // 确保不为负数
+        if (totalArea && plotArea && !isNaN(totalArea) && !isNaN(plotArea)) {
+          let baseArea;
+          
+          // 如果是新增模式且有现有地块，使用数据库中的剩余面积作为基数
+          if (!isEditMode.value && categories.value.length > 0) {
+            baseArea = categories.value[0].farmplotShengarea || 0;
+          } else {
+            // 如果是编辑模式或没有现有地块，使用农场总面积作为基数
+            baseArea = totalArea;
           }
-        }
-        // 如果没有现有地块，使用农场总面积减去地块面积
-        // 逻辑：剩余面积 = 农场总面积 - 地块面积
-        else if (totalArea && plotArea && !isNaN(totalArea) && !isNaN(plotArea)) {
-          const remaining = totalArea - plotArea;
-          formData.value.farmplotShengarea = Math.max(0, remaining); // 确保不为负数
+          
+          const remaining = baseArea - plotArea;
+          formData.value.farmplotShengarea = Math.max(0, remaining);
         } else {
-          // 如果任一值为空，清空剩余面积
           formData.value.farmplotShengarea = null;
         }
       };
@@ -580,10 +637,7 @@
       const fetchRotationPlans = async () => {
         try {
           // 获取所有轮作计划，用于下拉选择
-          const response = await cropRotationList.listcropRotation({
-            current: 1,
-            size: 1000  // 获取所有轮作计划
-          });
+          const response = await farmPlotList.listDTO();
           
           // 保存轮作计划列表到响应式数据
           rotationPlans.value = response?.records || [];
@@ -663,18 +717,30 @@
           createTime: '',
           remark: '',
           rotationId: null,
-          farmplotImage: null // 新增时图片为空
+          farmplotImage: null, // 新增时图片为空
+          farmplotZuowu: '',  // 适合种植作物
+          farmplotLunzuowu: '' // 轮作作物
         };
         
         // 如果已有地块，取第一个地块的农场总面积和剩余面积作为初始值
-        // 这样新增地块时，会使用现有地块的农场总面积
         if (categories.value.length > 0) {
           formData.value.farmplotCount = categories.value[0].farmplotCount;
+          // 新增时，剩余面积等于数据库中的剩余面积（因为地块面积还是0）
           formData.value.farmplotShengarea = categories.value[0].farmplotShengarea;
-        }
-        
+        } else {
+          // 如果没有现有地块，剩余面积等于农场总面积
+          formData.value.farmplotShengarea = formData.value.farmplotCount;
+        } 
         // 显示对话框
         dialogVisible.value = true;
+        // 强制触发响应式更新，确保第一次打开时数据正确显示
+        setTimeout(() => {
+          if (categories.value.length > 0) {
+            formData.value.farmplotShengarea = categories.value[0].farmplotShengarea;
+          } else {
+            formData.value.farmplotShengarea = formData.value.farmplotCount;
+          }
+        }, 0);
       };
   
       /**
@@ -699,7 +765,9 @@
           createTime: category.createTime,
           remark: category.remark || '',
           rotationId: category.rotationId || null,  // 编辑时从地块数据中获取轮作计划ID
-          farmplotImage: category.farmplotImage || null // 编辑时从地块数据中获取图片
+          farmplotImage: category.farmplotImage || null, // 编辑时从地块数据中获取图片
+          farmplotZuowu: (category as any).farmplotZuowu || '' ,// 编辑时从地块数据中获取种植作物
+          farmplotLunzuowu: (category as any).farmplotLunzuowu || '' // 编辑时从地块数据中获取轮作作物
         };
         
         // 显示对话框
@@ -732,6 +800,8 @@
           createTime: formData.value.createTime,
           rotationId: formData.value.rotationId,  // 轮作计划ID，关联到轮作计划表
           farmplotImage: formData.value.farmplotImage || null, // 地块图片
+          farmplotZuowu: formData.value.farmplotZuowu, // 种植作物
+          farmplotLunzuowu: formData.value.farmplotLunzuowu, // 轮作作物
           createBy: null,
           updateBy: null,
           updateTime: null
@@ -774,6 +844,9 @@
             ElMessage.success('新增种类成功');
           }
           
+          // 重新计算剩余面积
+          await cxjsArea();
+          
           // 操作成功后刷新列表
           await fetchCategories(pagination.value.current, pagination.value.size);
           
@@ -792,6 +865,33 @@
   
   
       /**
+       * 重新计算剩余面积
+       * 获取所有地块数据，计算剩余面积并更新到数据库
+       */
+      const cxjsArea = async () => {
+        try {
+          // 获取所有地块数据
+          const response = await farmPlotList.listfarmPlot({ current: 1, size: 1000 });
+          
+          if (response?.records?.length > 0) {
+            // 获取农场总面积
+            const totalArea = response.records[0].farmplotCount || 0;
+            // 计算所有地块的总使用面积
+            const usedArea = response.records.reduce((sum, plot) => sum + (plot.farmplotArea || 0), 0);
+            // 计算剩余面积 = 总面积 - 已使用面积
+            const remainingArea = totalArea - usedArea;
+            
+            // 并行更新所有地块的剩余面积
+            await Promise.all(response.records.map(plot => 
+              farmPlotList.editfarmPlot({ ...plot, farmplotShengarea: remainingArea })
+            ));
+          }
+        } catch (error) {
+          console.error('重新计算剩余面积失败:', error);
+        }
+      };
+
+      /**
        * 删除地块
        * @param farmplotId 要删除的地块ID
        */
@@ -802,6 +902,9 @@
           
           // 删除成功后从列表中移除该地块
           categories.value = categories.value.filter(cat => cat.farmplotId !== farmplotId);
+          
+          // 重新计算剩余面积
+          await cxjsArea();
           
           // 显示删除成功提示
           ElMessage.success('删除成功');
@@ -853,16 +956,10 @@
 
       // 监听轮作计划ID变化，更新地块图片
       watch(() => formData.value.rotationId, (newRotationId) => {
-        if (newRotationId) {
-          const selectedPlan = rotationPlans.value.find(plan => plan.id === newRotationId);
-          if (selectedPlan) {
-            formData.value.farmplotImage = selectedPlan.rotationImage || null;
-          } else {
-            formData.value.farmplotImage = null;
-          }
-        } else {
-          formData.value.farmplotImage = null;
-        }
+        // 根据轮作计划ID查找对应的轮作计划数据
+        const selectedPlan = newRotationId ? rotationPlans.value.find(plan => plan.classId === newRotationId) : null;
+        // 使用轮作计划的图片字段更新地块图片，如果没有则设为null
+        formData.value.farmplotImage = selectedPlan?.rotationImage || null;
         console.log('轮作计划ID变化，更新图片:', formData.value.farmplotImage);
       });
 
@@ -887,6 +984,7 @@
         displayedImages,
         getImageList,
         getRotationPlanName,
+        handleRotationChange,
         fetchCategories,
         handleSearch,
         handleReset,

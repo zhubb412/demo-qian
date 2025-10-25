@@ -362,7 +362,9 @@
         remark: '',
         rotationImages: [] as string[], // 计划图片数组
         rotationClassname: '', // 作物名称（存储到数据库）
-        rotationAdapt: '' // 适配作物（存储到数据库）
+        rotationAdapt: '', // 适配作物（存储到数据库）
+        rotationId1: 0, // 作物名称对应的classId
+        rotationId2: 0 // 适配作物对应的classId
       });
 
       /** 作物列表数据 */
@@ -390,7 +392,8 @@
       /** 当前编辑的作物轮作计划数据 */
       const currentCategory = ref<CropRotationItem>({
         id: 0,
-        rotationId: 0,
+        rotationId1: 0,
+        rotationId2: 0,
         rotationName: '',
         rotationBenefit: '',
         rotationCycle: '',
@@ -502,6 +505,23 @@
           formData.value.rotationClassname = selectedCrop.className;
           formData.value.rotationAdapt = selectedCrop.classAdapt || '';
           
+          // 设置rotationId1为选中作物的classId
+          formData.value.rotationId1 = selectedCrop.classId;
+          
+          // 根据适配作物名称查找对应的classId
+          if (selectedCrop.classAdapt) {
+            const adaptedCrop = cropList.value.find(crop => 
+              crop.className === selectedCrop.classAdapt
+            );
+            if (adaptedCrop) {
+              formData.value.rotationId2 = adaptedCrop.classId;
+            } else {
+              formData.value.rotationId2 = 0;
+            }
+          } else {
+            formData.value.rotationId2 = 0;
+          }
+          
           // 自动填充图片
           updateRotationImages(selectedCrop);
         }
@@ -550,7 +570,9 @@
           remark: '',
           rotationImages: [],
           rotationClassname: '',
-          rotationAdapt: ''
+          rotationAdapt: '',
+          rotationId1: 0,
+          rotationId2: 0
         };
         
         // 显示对话框
@@ -588,7 +610,9 @@
           remark: category.remark || '',
           rotationImages: category.rotationImage ? category.rotationImage.split('|') : [],
           rotationClassname: category.rotationClassname || '', // 直接使用数据库字段
-          rotationAdapt: category.rotationAdapt || '' // 直接使用数据库字段
+          rotationAdapt: category.rotationAdapt || '', // 直接使用数据库字段
+          rotationId1: category.rotationId1 || 0, // 使用数据库中的rotationId1
+          rotationId2: category.rotationId2 || 0 // 使用数据库中的rotationId2
         };
         
         // 显示对话框
@@ -612,7 +636,8 @@
       const prepareSubmitData = (): CropRotationItem => {
         return {
           id: 0,
-          rotationId: 0,
+          rotationId1: formData.value.rotationId1,
+          rotationId2: formData.value.rotationId2,
           rotationName: formData.value.rotationName,
           rotationBenefit: formData.value.rotationBenefit,
           rotationCycle: formData.value.rotationCycle,

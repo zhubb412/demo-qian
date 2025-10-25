@@ -9,7 +9,8 @@ import type { CategoryItem } from './classManagementApi'
 // 作物轮作计划接口
 export  interface CropRotationItem {
     id: number;
-    rotationId: number;
+    rotationId1: number;
+    rotationId2: number;
     rotationName: string;
     rotationBenefit: string;
     rotationCycle: string;
