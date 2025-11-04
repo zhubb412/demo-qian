@@ -143,6 +143,9 @@
         
         <!-- 卡片操作按钮 -->
         <div class="card-actions">
+          <el-button type="success" size="small" @click="showTaskDialog(category)">
+            生长任务
+          </el-button>
           <el-button type="primary" size="small" :icon="Edit" @click="showEditDialog(category)">
             编辑
           </el-button>
@@ -297,6 +300,17 @@
       </template>
     </el-dialog>
 
+    <!-- 任务管理对话框 -->
+    <el-dialog 
+      title="任务管理" 
+      v-model="taskDialogVisible" 
+      width="60%"
+      :before-close="handleTaskDialogClose"
+      top="5vh"
+    >
+      <TaskManagement :category="selectedCategory || undefined" />
+    </el-dialog>
+
   </div>
 </template>
 
@@ -305,6 +319,8 @@ import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
 import { Picture, Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus } from '@element-plus/icons-vue';
 import { classManagementList, type CategoryItem, type PaginationResult } from '@/api/classManagementApi';
+// @ts-ignore
+import TaskManagement from '@/views/task/index.vue';
 
 // 使用API中定义的接口类型
 type Category = CategoryItem;
@@ -315,6 +331,9 @@ type Category = CategoryItem;
  */
 export default {
   name: 'CategoryManager',
+  components: {
+    TaskManagement
+  },
   setup() {
     // 响应式数据定义
     
@@ -414,6 +433,12 @@ export default {
       status: null
     });
     
+    /** 任务管理对话框显示状态 */
+    const taskDialogVisible = ref(false);
+    
+    /** 选中的种类数据（用于任务管理） */
+    const selectedCategory = ref<Category | null>(null);
+    
 
     /**
      * 准备搜索参数
@@ -508,7 +533,7 @@ export default {
 
     /**
      * 显示编辑种类对话框
-     * @param category 要编辑的种类数据
+     * @param category 要编辑的种类数据（任务管理可以获取到种类所有数据）
      */
     const showEditDialog = (category: Category) => {
       // 设置为编辑模式
@@ -531,6 +556,23 @@ export default {
       
       // 显示对话框
       dialogVisible.value = true;
+    };
+
+    /**
+     * 显示任务管理对话框
+     * @param category 选中的种类数据
+     */
+    const showTaskDialog = (category: Category) => {
+      selectedCategory.value = { ...category };
+      taskDialogVisible.value = true;
+    };
+
+    /**
+     * 关闭任务管理对话框
+     */
+    const handleTaskDialogClose = () => {
+      taskDialogVisible.value = false;
+      selectedCategory.value = null;
     };
 
     /**
@@ -744,12 +786,16 @@ export default {
       submitLoading,
       formData,
       formRules,
+      taskDialogVisible,
+      selectedCategory,
       fetchCategories,
       handleSearch,
       handleReset,
       showAddDialog,
       showEditDialog,
+      showTaskDialog,
       handleClose,
+      handleTaskDialogClose,
       prepareSubmitData,
       handleSubmit,
       customUpload,
@@ -1088,14 +1134,15 @@ h2 {
 .card-actions {
   padding: 0 20px 20px 20px;
   display: flex;
-  gap: 12px;
+  gap: 8px;
   justify-content: flex-end;
 }
 
 .card-actions .el-button {
   flex: 1;
-  max-width: 60px;
+  max-width: 70px;
   height: 30px;
+  font-size: 12px;
 }
 
 /* 分页组件样式 */

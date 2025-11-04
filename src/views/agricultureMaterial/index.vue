@@ -98,6 +98,15 @@
               <span class="detail-value">{{ material.measureUnit }}</span>
             </div>
             
+            <!-- 农资价格 -->
+            <div class="detail-item">
+              <el-icon class="detail-icon">
+                <Grid />
+              </el-icon>
+              <span class="detail-label">农资价格:</span>
+              <span class="detail-value">{{ material.materialJg}}</span>
+            </div>
+            
             <!-- 创建时间 -->
             <div v-if="material.createTime" class="detail-item">
               <el-icon class="detail-icon">
@@ -183,6 +192,14 @@
           <el-input 
             v-model="formData.measureUnit" 
             placeholder="请输入计量单位"
+            clearable
+          />
+        </el-form-item>
+        <!-- 农资价格 -->
+        <el-form-item label="农资价格" prop="materialJg">
+          <el-input 
+            v-model="formData.materialJg" 
+            placeholder="请输入农资价格"
             clearable
           />
         </el-form-item>
@@ -296,7 +313,8 @@ export default {
       measureUnit: '',
       createTime: '',
       remark: '',
-      materialImage: ''
+      materialImage: '', 
+      materialJg: ''
     });
     
     /** 表单验证规则 */
@@ -322,6 +340,7 @@ export default {
       materialName: '',
       materialImage: null,
       measureUnit: null,
+      materialJg: null,
       remark: null,
       createTime: null,
       createBy: null,
@@ -410,7 +429,8 @@ export default {
         measureUnit: '',
         createTime: '',
         remark: '',
-        materialImage: ''
+        materialImage: '',
+        materialJg: ''
       };
       
       // 显示对话框
@@ -435,7 +455,8 @@ export default {
         measureUnit: material.measureUnit || '',
         createTime: material.createTime || '',
         remark: material.remark || '',
-        materialImage: material.materialImage || ''
+        materialImage: material.materialImage || '',
+        materialJg: material.materialJg || ''
       };
       
       // 显示对话框
@@ -463,6 +484,7 @@ export default {
         materialName: formData.value.materialName,
         materialImage: formData.value.materialImage || null,
         measureUnit: formData.value.measureUnit || null,
+        materialJg: formData.value.materialJg || null,
         remark: formData.value.remark || null,
         createTime: formData.value.createTime,
         createBy: null,

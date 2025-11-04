@@ -294,11 +294,20 @@
           
           <!-- 负责人 -->
           <el-form-item label="负责人" prop="farmplotFzr">
-            <el-input 
+            <el-select 
               v-model="formData.farmplotFzr" 
-              placeholder="请输入负责人"
+              placeholder="请选择负责人"
               clearable
-            />
+              filterable
+              style="width: 100%"
+            >
+              <el-option
+                v-for="user in userList"
+                :key="user.id"
+                :label="user.userName"
+                :value="user.userName"
+              />
+            </el-select>
           </el-form-item>
           
           <!-- 创建时间 -->
@@ -383,7 +392,7 @@
   import { ElMessage } from 'element-plus';
   import { Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus, MapLocation, Picture } from '@element-plus/icons-vue';
   import { farmPlotList, type FarmPlotItem, type PaginationResult, type FarmPlotDTOItem } from '@/api/farmPlotApi';
-  
+  import { sysUserList, type SysUserItem } from '@/api/sysUserApi';
   // 使用API中定义的接口类型
   type Category = FarmPlotItem;
   
@@ -401,6 +410,9 @@
       
       /** 轮作计划列表数据 - 用于下拉选择 */
       const rotationPlans = ref<FarmPlotDTOItem[]>([]);
+      
+      /** 用户列表数据 - 用于负责人下拉选择 */
+      const userList = ref<SysUserItem[]>([]);
       
       /** 分页信息 */
       const pagination = ref({
@@ -467,21 +479,30 @@
       };
 
       /**
+       * 重置表单字段（轮作相关）
+       */
+      const resetRotationFields = () => {
+        formData.value.farmplotZuowu = '';
+        formData.value.farmplotLunzuowu = '';
+        formData.value.classId1 = null;
+        formData.value.classId2 = null;
+      };
+
+      /**
        * 处理轮作计划变化，自动填充适合种植作物和轮作作物
        */
       const handleRotationChange = (rotationId: number | null) => {
-        if (rotationId) {
-          const selectedPlan = rotationPlans.value.find(plan => plan.classId === rotationId);
-          if (selectedPlan) {
-            formData.value.farmplotZuowu = selectedPlan.className; // 适合种植作物
-            formData.value.farmplotLunzuowu = selectedPlan.classAdapt; // 轮作作物（隐藏字段）
-          } else {
-            formData.value.farmplotZuowu = '';
-            formData.value.farmplotLunzuowu = '';
-          }
+        const selectedPlan = rotationId 
+          ? rotationPlans.value.find(plan => plan.classId === rotationId) 
+          : null;
+        
+        if (selectedPlan) {
+          formData.value.farmplotZuowu = selectedPlan.className;
+          formData.value.farmplotLunzuowu = selectedPlan.classAdapt;
+          formData.value.classId1 = selectedPlan.rotationId1;
+          formData.value.classId2 = selectedPlan.rotationId2;
         } else {
-          formData.value.farmplotZuowu = '';
-          formData.value.farmplotLunzuowu = '';
+          resetRotationFields();
         }
       };
       
@@ -499,6 +520,8 @@
         farmplotImage: null as string | null, // 地块图片，根据选择的轮作计划自动填充
         farmplotZuowu: '', // 种植作物
         farmplotLunzuowu: '', // 轮作作物
+        classId1: null as number | null, // 轮作计划中的第一个作物ID
+        classId2: null as number | null, // 轮作计划中的第二个作物ID
       });
       
       /** 表单验证规则 */
@@ -574,6 +597,8 @@
       const currentCategory = ref<Category>({
         farmplotId: 0,
         rotationId: 0,
+        classId1: 0,
+        classId2: 0,
         farmplotName: '',
         farmplotZuowu: '',
         farmplotLunzuowu: '',
@@ -649,6 +674,21 @@
       };
 
       /**
+       * 获取用户列表数据
+       * 用于负责人下拉选择
+       */
+      const fetchUserList = async () => {
+        try {
+          const response = await sysUserList.listSysUser();
+          userList.value = response?.records || [];
+        } catch (error) {
+          console.error('获取用户列表失败:', error);
+          ElMessage.error('获取用户列表失败');
+          userList.value = [];
+        }
+      };
+
+      /**
        * 获取种类列表数据
        */
       const fetchCategories = async (page: number = pagination.value.current, pageSize: number = pagination.value.size) => {
@@ -700,10 +740,22 @@
       };
   
       /**
+       * 初始化剩余面积
+       */
+      const initRemainingArea = () => {
+        const firstCategory = categories.value[0];
+        if (firstCategory) {
+          formData.value.farmplotCount = firstCategory.farmplotCount;
+          formData.value.farmplotShengarea = firstCategory.farmplotShengarea;
+        } else {
+          formData.value.farmplotShengarea = formData.value.farmplotCount;
+        }
+      };
+
+      /**
        * 显示新增种类对话框
        */
       const showAddDialog = () => {
-        // 设置为新增模式
         isEditMode.value = false;
         
         // 重置表单数据
@@ -717,30 +769,18 @@
           createTime: '',
           remark: '',
           rotationId: null,
-          farmplotImage: null, // 新增时图片为空
-          farmplotZuowu: '',  // 适合种植作物
-          farmplotLunzuowu: '' // 轮作作物
+          farmplotImage: null,
+          farmplotZuowu: '',
+          farmplotLunzuowu: '',
+          classId1: null,
+          classId2: null
         };
         
-        // 如果已有地块，取第一个地块的农场总面积和剩余面积作为初始值
-        if (categories.value.length > 0) {
-          formData.value.farmplotCount = categories.value[0].farmplotCount;
-          // 新增时，剩余面积等于数据库中的剩余面积（因为地块面积还是0）
-          formData.value.farmplotShengarea = categories.value[0].farmplotShengarea;
-        } else {
-          // 如果没有现有地块，剩余面积等于农场总面积
-          formData.value.farmplotShengarea = formData.value.farmplotCount;
-        } 
-        // 显示对话框
+        initRemainingArea();
         dialogVisible.value = true;
-        // 强制触发响应式更新，确保第一次打开时数据正确显示
-        setTimeout(() => {
-          if (categories.value.length > 0) {
-            formData.value.farmplotShengarea = categories.value[0].farmplotShengarea;
-          } else {
-            formData.value.farmplotShengarea = formData.value.farmplotCount;
-          }
-        }, 0);
+        
+        // 确保第一次打开时数据正确显示
+        setTimeout(initRemainingArea, 0);
       };
   
       /**
@@ -767,7 +807,9 @@
           rotationId: category.rotationId || null,  // 编辑时从地块数据中获取轮作计划ID
           farmplotImage: category.farmplotImage || null, // 编辑时从地块数据中获取图片
           farmplotZuowu: (category as any).farmplotZuowu || '' ,// 编辑时从地块数据中获取种植作物
-          farmplotLunzuowu: (category as any).farmplotLunzuowu || '' // 编辑时从地块数据中获取轮作作物
+          farmplotLunzuowu: (category as any).farmplotLunzuowu || '', // 编辑时从地块数据中获取轮作作物
+          classId1: category.classId1 || null, // 编辑时从地块数据中获取第一个作物ID
+          classId2: category.classId2 || null // 编辑时从地块数据中获取第二个作物ID
         };
         
         // 显示对话框
@@ -788,26 +830,21 @@
       /**
        * 准备提交数据
        */
-      const prepareSubmitData = () => {
+      const prepareSubmitData = (): FarmPlotItem => {
         const data: any = {
-          farmplotName: formData.value.farmplotName,
+          ...formData.value,
           farmplotCount: formData.value.farmplotCount || 0,
           farmplotArea: formData.value.farmplotArea || 0,
           farmplotShengarea: formData.value.farmplotShengarea || 0,
-          farmplotPosition: formData.value.farmplotPosition,
-          farmplotFzr: formData.value.farmplotFzr,
           remark: formData.value.remark || null,
-          createTime: formData.value.createTime,
-          rotationId: formData.value.rotationId,  // 轮作计划ID，关联到轮作计划表
-          farmplotImage: formData.value.farmplotImage || null, // 地块图片
-          farmplotZuowu: formData.value.farmplotZuowu, // 种植作物
-          farmplotLunzuowu: formData.value.farmplotLunzuowu, // 轮作作物
+          farmplotImage: formData.value.farmplotImage || null,
+          classId1: formData.value.classId1 || 0,
+          classId2: formData.value.classId2 || 0,
           createBy: null,
           updateBy: null,
           updateTime: null
         };
         
-        // 只有编辑时才添加farmplotId
         if (isEditMode.value) {
           data.farmplotId = currentCategory.value.farmplotId;
         }
@@ -966,11 +1003,13 @@
       // 组件初始化时加载数据
       fetchCategories();        // 获取地块列表
       fetchRotationPlans();     // 获取轮作计划列表
+      fetchUserList();          // 获取用户列表
   
       // 返回组件需要的数据和方法
       return {
         categories,
         rotationPlans,
+        userList,
         pagination,
         searchForm,
         currentCategory,

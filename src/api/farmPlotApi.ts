@@ -5,6 +5,8 @@ import type { BaseResult, BaseArrayResult } from '@/types/axios'
 export interface FarmPlotItem {
     farmplotId: number;
     rotationId: number;
+    classId1: number;
+    classId2: number;
     farmplotName: string;
     farmplotZuowu: string;
     farmplotLunzuowu: string;

@@ -31,6 +31,12 @@
           <el-icon><Crop /></el-icon>
           <span>农资管理</span>
         </el-menu-item>
+
+        <el-menu-item index="task">
+          <el-icon><Crop /></el-icon>
+          <span>种植任务</span>
+        </el-menu-item>
+
         <el-menu-item index="settings">
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
@@ -99,6 +105,7 @@ watch(() => route.path, (newPath) => {
     '/main/agriculture-material': 'agriculture-material',
     '/main/crop-rotation': 'crop-rotation',
     '/main/farm-plot': 'farm-plot',
+    '/main/task': 'task',
     '/main/settings': 'settings'
   }
   
@@ -118,6 +125,7 @@ function onSelectMenu(index: string) {
     'agriculture-material': '/main/agriculture-material',
     'crop-rotation': '/main/crop-rotation',
     'farm-plot': '/main/farm-plot',
+    'task': '/main/task',
     'settings': '/main/settings'
   }
   

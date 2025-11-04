@@ -12,6 +12,7 @@ export interface AgricultureMaterialItem {
     materialName: string;
     materialImage: string | null;
     measureUnit: string | null;
+    materialJg: string | null;
     remark: string | null;
     createTime: string | null;
     createBy: string | null;
