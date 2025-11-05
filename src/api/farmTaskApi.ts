@@ -13,22 +13,24 @@ export interface FarmTaskItem {
     actualFinish: string;
     status: string;
     createTime: string;
-    createBy: string | null;
-    updateBy: string | null;
-    updateTime: string | null;
+    createBy: string;
+    updateBy: string;
+    updateTime: string ;
 }
 
 //listDTO返回的数据结构（RenWuDTO方法返回的数据格式）
 export interface FarmTaskDTOItem {
     taskId: number;
     farmplotId: number;
+    farmplotName: string;
     classId1: number;
     classId2: string;
-    taskName: number | null;
-    taskRen: string | null;
+    taskName: string ;
+    taskRen: string;
     farmId: number;
     farmtaskName: string;
     responsiblePersonName: string;
+    status: string;
 }
 //分页响应接口
 export interface PaginationResult<T> {

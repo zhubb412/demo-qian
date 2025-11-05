@@ -170,23 +170,10 @@ const getList = async () => {
         const rawData = (res as any)?.records || (res as any)?.data || res || []
         const data = Array.isArray(rawData) ? rawData : []
         
-        // 映射并过滤数据 - 只保留 FarmTaskDTOItem 中的字段
-        let tasks = data
-            .map((item: FarmTaskDTOItem) => ({
-                taskId: item.taskId,
-                farmplotId: item.farmplotId,
-                classId1: item.classId1,
-                classId2: item.classId2,
-                taskName: item.taskName,
-                taskRen: item.taskRen,
-                farmId: item.farmId,
-                farmtaskName: item.farmtaskName,
-                responsiblePersonName: item.responsiblePersonName
-            }))
-            .filter((task: FarmTaskDTOItem) => 
-                !queryParams.taskName || task.farmtaskName?.includes(queryParams.taskName!)
-            )
-        
+        // 过滤数据 - 根据任务名称进行过滤
+        let tasks = data.filter((task: FarmTaskDTOItem) => 
+            !queryParams.taskName || task.farmtaskName?.includes(queryParams.taskName!)
+        )
         taskList.value = tasks
         total.value = (res as any)?.total || tasks.length
     } catch (error) {

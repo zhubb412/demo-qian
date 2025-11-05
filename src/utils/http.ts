@@ -49,8 +49,9 @@ service.interceptors.response.use(
     }
     
     // 如果后端返回的是包装格式，按原来的逻辑处理
-    // 兼容字符串和数字类型的code
-    if (data.code !== undefined && (String(data.code) === '200' || String(data.code) === '0')) {
+    // 兼容字符串和数字类型的code，成功状态码包括：200、0、1
+    const codeStr = String(data.code)
+    if (data.code !== undefined && (codeStr === '200' || codeStr === '0' || codeStr === '1')) {
       return data
     } else if (data.code !== undefined) {
       // 处理业务错误
