@@ -41,11 +41,23 @@
                                 <span class="info-item" v-if="task.taskRen">
                                     任务人：{{ task.taskRen }}
                                 </span>
+                                <span class="info-item" v-if="task.actualStart">
+                                    任务开始时间：{{ formatDate(task.actualStart) }}
+                                </span>
+                                <span class="info-item" v-if="task.actualFinish">
+                                    任务结束时间：{{ formatDate(task.actualFinish) }}
+                                </span>
                             </div>
                         </div>
 
                         <div class="task-actions">
                             <div class="action-buttons">
+                                <!-- 任务状态显示 - 使用 StatusSelect 组件 -->
+                                <status-select 
+                                    :model-value="task.status || '0'" 
+                                    disabled
+                                    class="status-display"
+                                />
                                 <el-button 
                                     size="small" 
                                     type="primary" 
@@ -75,9 +87,9 @@
             :close-on-click-modal="true"   
         >
             <TaskDetail
-                v-if="showTaskDetailDialog"
+                v-if="showTaskDetailDialog && taskId"
                 :taskId="taskId"
-                :oprType="oprType"
+                :oprType="oprType || undefined"
                 :key="taskId"
                 @close="showTaskDetailDialog = false"
                 @updated="onTaskUpdated"
@@ -91,6 +103,7 @@ import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Search, Refresh, Edit } from '@element-plus/icons-vue'
 import TaskDetail from '../TaskDetail/index.vue'
+import StatusSelect from '../TaskDetail/StatusSelect.vue'
 import { farmTaskList } from '@/api/farmTaskApi'
 import type { FarmTaskDTOItem } from '@/api/farmTaskApi'
 
@@ -144,6 +157,19 @@ const queryParams = reactive<QueryParams>({
     planFinish: null
 })
 
+// 格式化日期：后端统一返回 yyyy-MM-dd 格式，直接返回
+const formatDate = (dateStr: string | null | undefined): string => {
+    if (!dateStr) {
+        return ''
+    }
+    // 如果包含时间部分（如 "2025-11-13 00:00:00"），提取日期部分
+    if (dateStr.includes(' ')) {
+        return dateStr.split(' ')[0]
+    }
+    // 否则直接返回（后端统一是 yyyy-MM-dd 格式）
+    return dateStr
+}
+
 
 // 获取任务列表
 const getList = async () => {
@@ -174,6 +200,7 @@ const getList = async () => {
         let tasks = data.filter((task: FarmTaskDTOItem) => 
             !queryParams.taskName || task.farmtaskName?.includes(queryParams.taskName!)
         )
+        
         taskList.value = tasks
         total.value = (res as any)?.total || tasks.length
     } catch (error) {
@@ -232,7 +259,33 @@ onMounted(() => {
 })
 
 // 处理任务更新
-const onTaskUpdated = () => {
+const onTaskUpdated = (updatedData?: any) => {
+    console.log('收到更新事件，数据:', updatedData)
+    // 如果有更新的数据，直接更新本地列表中的任务状态
+    if (updatedData && updatedData.taskId) {
+        const taskIndex = taskList.value.findIndex(t => t.taskId === updatedData.taskId)
+        console.log('找到任务索引:', taskIndex, '任务ID:', updatedData.taskId)
+        if (taskIndex !== -1) {
+            // 更新任务状态
+            if (updatedData.status !== undefined) {
+                console.log('更新状态:', taskList.value[taskIndex].status, '->', updatedData.status)
+                taskList.value[taskIndex].status = String(updatedData.status)
+            }
+            // 更新责任人
+            if (updatedData.responsiblePersonName !== undefined) {
+                taskList.value[taskIndex].responsiblePersonName = updatedData.responsiblePersonName
+            }
+            // 更新日期
+            if (updatedData.actualStart !== undefined) {
+                taskList.value[taskIndex].actualStart = updatedData.actualStart
+            }
+            if (updatedData.actualFinish !== undefined) {
+                taskList.value[taskIndex].actualFinish = updatedData.actualFinish
+            }
+            console.log('更新后的任务:', taskList.value[taskIndex])
+        }
+    }
+    // 重新获取列表数据（确保数据同步）
     getList()
 }
 </script>
@@ -334,6 +387,36 @@ const onTaskUpdated = () => {
     padding: 5px 10px;
     height: 28px;
     font-size: 12px;
+}
+
+/* StatusSelect 组件在列表中的样式 */
+.gantt-container .table .task-list .task-card .task-content .task-actions .action-buttons .status-display {
+    margin-right: 8px;
+}
+
+.gantt-container .table .task-list .task-card .task-content .task-actions .action-buttons .status-display :deep(.radioSelect) {
+    margin-top: 0;
+    height: auto;
+    min-height: 28px;
+}
+
+.gantt-container .table .task-list .task-card .task-content .task-actions .action-buttons .status-display :deep(.radioSelect .title) {
+    width: auto;
+    height: auto;
+    min-width: 60px;
+}
+
+.gantt-container .table .task-list .task-card .task-content .task-actions .action-buttons .status-display :deep(.radioSelect .title div:first-of-type) {
+    font-size: 12px;
+    line-height: 1.2;
+}
+
+.gantt-container .table .task-list .task-card .task-content .task-actions .action-buttons .status-display :deep(.radioSelect .title div:last-of-type) {
+    display: none;
+}
+
+.gantt-container .table .task-list .task-card .task-content .task-actions .action-buttons .status-display :deep(.radioSelect .del) {
+    display: none;
 }
 
 .pagination-container {

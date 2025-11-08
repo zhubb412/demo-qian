@@ -31,6 +31,8 @@ export interface FarmTaskDTOItem {
     farmtaskName: string;
     responsiblePersonName: string;
     status: string;
+    actualStart?: string;
+    actualFinish?: string;
 }
 //分页响应接口
 export interface PaginationResult<T> {

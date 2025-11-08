@@ -100,8 +100,8 @@ const changeData = (value) => {
             width: 150px;
         }
         :deep(.el-input__wrapper){
-            margin-top: 16px;
-            height: 20px;
+            margin-top: 0;
+            height: 32px;
             padding-right: 25px;
             //时间的边框样式
             box-shadow: none !important;
@@ -111,7 +111,8 @@ const changeData = (value) => {
             .el-input__inner {
                 text-align: center;
                 color: #999;
-                font-size: 15px;
+                font-size: 16px;
+                line-height: 32px;
             }
         }
 
@@ -122,7 +123,11 @@ const changeData = (value) => {
     .label {
         font-size: 15px;
         color: #999;
-        margin-left: 12px;
+        margin-top: 8px;
+        margin-left: 0;
+        text-align: center;
+        width: 100%;
+        white-space: nowrap;
     }
 }
 </style>

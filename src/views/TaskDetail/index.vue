@@ -21,13 +21,14 @@
                     </el-form-item>
                 </el-col>
                 <el-col :span="4" class="flex items-center">
-                    <calendar-select v-model="form.actualStart" :showTime="false" :disabledDate="disableActualStartDate">任务开始时间</calendar-select>
+                    <calendar-select v-model="form.actualStart" :showTime="false" @change="handleDateChange">任务开始时间</calendar-select>
                 </el-col>
                 <el-col :span="4" class="flex items-center">
                     <calendar-select
                       v-model="form.actualFinish"
                       :showTime="false"
-                      :disabledDate="disableActualFinishDate"
+                    
+                      @change="handleDateChange"
                     >
                       任务结束时间
                     </calendar-select>
@@ -49,16 +50,6 @@
                                     {{ form.farmtaskName || '--暂无描述--' }}
                                 </div>
                         </div>
-                        
-                        <div class="person-info-title">人员信息：</div>
-                        <multiple-select
-                          v-model="selectEmployeeList"
-                          class="person-info-select"
-                          :options="employeeList"
-                          key-name="employeeName"
-                          value-name="employeeId"
-                          @change="handleTaskEmployeeChange"
-                        />
                         
                         <div class="mt-8">
                             <div style="display: flex; align-items: center; margin-bottom: 1rem;">
@@ -82,7 +73,7 @@
                                 <span>人工工时</span>
                             </span>
                         </template>
-                        <cost-employee ref="costEmployeeRef" :task-id="taskId" :task-employee-list="selectedEmployeeObjects" :current-user="currentUser" @log="fetchLogList"></cost-employee>
+                        <cost-employee ref="costEmployeeRef" :task-id="taskId" :task-employee-list="[]" :current-user="currentUser" @log="fetchLogList"></cost-employee>
                     </el-tab-pane>
                     <el-tab-pane name="costMaterial">
                         <template #label>
@@ -104,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Document, User, Food } from '@element-plus/icons-vue'
 import { farmTaskList, type FarmTaskItem, type FarmTaskDTOItem } from '@/api/farmTaskApi'
@@ -112,9 +103,8 @@ import { sysUserList, type SysUserItem } from '@/api/sysUserApi'
 import StatusSelect from "./StatusSelect.vue"
 import RadioSelect from "./RadioSelect.vue"
 import CalendarSelect from "./CalendarSelect.vue"
-// import MultipleSelect from "./MultipleSelect.vue"
-// import CostEmployee from "./CostEmployee.vue"
-// import CostMaterial from './CostMaterial.vue'   
+import CostEmployee from "./CostEmployee.vue"
+import CostMaterial from './CostMaterial.vue'   
 
 // Props 定义
 const props = defineProps({
@@ -135,8 +125,6 @@ const props = defineProps({
 const activeTab = ref("taskInfo")
 const formRef = ref(null)
 const userList = ref<any[]>([])
-const employeeList = ref<any[]>([])
-const selectEmployeeList = ref<any[]>([])
 const logList = ref<any[]>([])
 const costEmployeeRef = ref(null)
 const loading = ref(false)
@@ -235,6 +223,8 @@ const fetchTaskDetail = async () => {
             responsiblePersonName: taskData.responsiblePersonName,
             // 处理状态：接口返回 "0" 或 "1"，确保是字符串类型
             status: taskData.status !== undefined && taskData.status !== null ? String(taskData.status) : "0",
+            actualStart: taskData.actualStart || null,
+            actualFinish: taskData.actualFinish || null,
         })
         
         // 设置责任人ID（如果用户列表已加载，则立即设置；否则通过 watch 监听设置）
@@ -247,8 +237,8 @@ const fetchTaskDetail = async () => {
     }
 }
 
-// 保存任务修改（状态和责任人的变更）
-const handleSubmit = async () => {
+// 保存任务修改（通用保存函数，支持所有字段）
+const saveTask = async () => {
     if (!form.taskId) {
         ElMessage.warning('任务ID不存在，无法保存')
         return
@@ -267,16 +257,32 @@ const handleSubmit = async () => {
         // 确保状态值是 "0" 或 "1"
         const status = form.status === "1" ? "1" : "0"
         
+        // 格式化日期为 "yyyy-MM-dd" 格式
+        const formatDate = (dateStr: string | null) => {
+            if (!dateStr) return ''
+            // 如果已经是 "yyyy-MM-dd" 格式，直接返回
+            if (typeof dateStr === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+                return dateStr
+            }
+            // 如果是日期对象或其他格式，转换为 "yyyy-MM-dd"
+            const date = new Date(dateStr)
+            if (isNaN(date.getTime())) return ''
+            const year = date.getFullYear()
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const day = String(date.getDate()).padStart(2, '0')
+            return `${year}-${month}-${day}`
+        }
+        
         // 构建提交数据
         const submitData: FarmTaskItem = {
             taskId: form.taskId,
             farmtaskName: form.farmtaskName || '',
             responsiblePersonId: form.responsiblePersonId || 0,
             responsiblePersonName: responsiblePersonName || '',
-            planStart: form.planStart || '',
-            planFinish: form.planFinish || '',
-            actualStart: form.actualStart || '',
-            actualFinish: form.actualFinish || '',
+            planStart: formatDate(form.planStart),
+            planFinish: formatDate(form.planFinish),
+            actualStart: formatDate(form.actualStart),
+            actualFinish: formatDate(form.actualFinish),
             status: status,
             createTime: form.createTime || '',
             createBy: form.createBy || '',
@@ -307,9 +313,14 @@ const handleSubmit = async () => {
     }
 }
 
-const handleTaskEmployeeChange = () => {
-    // TODO: 实现人员变更处理逻辑
-    console.log('人员变更', selectEmployeeList.value)
+// 保存任务修改（状态和责任人的变更）
+const handleSubmit = () => {
+    saveTask()
+}
+
+// 日期变更处理
+const handleDateChange = () => {
+    saveTask()
 }
 
 const fetchLogList = () => {
@@ -317,30 +328,8 @@ const fetchLogList = () => {
     logList.value = []
 }
 
-// 日期禁用函数
-const disableActualFinishDate = (date: Date) => {
-    if (!form.actualStart) return false
-    const startDate = new Date(form.actualStart)
-    startDate.setHours(0, 0, 0, 0)
-    const checkDate = new Date(date)
-    checkDate.setHours(0, 0, 0, 0)
-    return checkDate.getTime() < startDate.getTime()
-}
-
-const disableActualStartDate = (date: Date) => {
-    const currentDate = new Date()
-    currentDate.setHours(0, 0, 0, 0)
-    const checkDate = new Date(date)
-    checkDate.setHours(0, 0, 0, 0)
-    return checkDate.getTime() < currentDate.getTime()
-}
 
 const emit = defineEmits(['close', 'updated'])
-
-// 计算属性 - 用于子组件
-const selectedEmployeeObjects = computed(() => {
-    return employeeList.value.filter((emp: any) => selectEmployeeList.value.includes(emp.employeeId))
-})
 
 // 根据责任人姓名设置责任人ID
 const setResponsiblePersonId = () => {
@@ -431,16 +420,6 @@ watch(() => props.taskId, (newVal) => {
 .cancel-btn:hover {
   background: #bdbdbd !important;
   color: #fff !important;
-}
-
-.person-info-title {
-  margin-top: 30px !important;   // 上方间隔
-  margin-bottom: 15px !important; // 下方间隔
-  font-size: 16px;
-}
-
-.person-info-select {
-  margin-bottom: 12px !important; // 下方间隔
 }
 
 // 视频文件容器样式
