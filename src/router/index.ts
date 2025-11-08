@@ -54,6 +54,11 @@ const routes: Array<RouteRecordRaw> = [
         path: 'task',
         name: 'Task',
         component: () => import('@/views/task/management.vue')
+      },
+      {
+        path: 'harvest',
+        name: 'Harvest',
+        component: () => import('@/views/harvest/index.vue')
       }
     ]
   }

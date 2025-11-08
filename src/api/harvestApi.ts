@@ -4,9 +4,10 @@ import type { BaseResult } from '@/types/axios'
 export interface HarvestItem {
     id: number;
     farmId: number;
+    farmplotId?: number; // 地块ID，用于区分不同地块
     className: string;
     classWeight: string;
-    date: string;
+    shouhuoTime: string;
     remark: string;
     status: string;
     classImg: string;

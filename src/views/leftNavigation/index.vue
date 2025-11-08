@@ -37,6 +37,11 @@
           <span>种植任务</span>
         </el-menu-item>
 
+        <el-menu-item index="harvest">
+          <el-icon><Crop /></el-icon>
+          <span>收获管理</span>
+        </el-menu-item>
+
         <el-menu-item index="settings">
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
@@ -106,6 +111,7 @@ watch(() => route.path, (newPath) => {
     '/main/crop-rotation': 'crop-rotation',
     '/main/farm-plot': 'farm-plot',
     '/main/task': 'task',
+    '/main/harvest': 'harvest',
     '/main/settings': 'settings'
   }
   
@@ -126,6 +132,7 @@ function onSelectMenu(index: string) {
     'crop-rotation': '/main/crop-rotation',
     'farm-plot': '/main/farm-plot',
     'task': '/main/task',
+    'harvest': '/main/harvest',
     'settings': '/main/settings'
   }
   
