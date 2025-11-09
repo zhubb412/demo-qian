@@ -59,6 +59,11 @@ const routes: Array<RouteRecordRaw> = [
         path: 'harvest',
         name: 'Harvest',
         component: () => import('@/views/harvest/index.vue')
+      },
+      {
+        path: 'sell',
+        name: 'Sell',
+        component: () => import('@/views/sell/index.vue')
       }
     ]
   }

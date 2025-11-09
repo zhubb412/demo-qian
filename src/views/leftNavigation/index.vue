@@ -42,6 +42,11 @@
           <span>收获管理</span>
         </el-menu-item>
 
+        <el-menu-item index="sell">
+          <el-icon><Document /></el-icon>
+          <span>销售记录</span>
+        </el-menu-item>
+
         <el-menu-item index="settings">
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
@@ -91,7 +96,7 @@ import { ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 // 引入 Element Plus 图标并在本组件中直接使用
-import { House, Setting, Expand, Fold, ArrowDown, Crop, Grid, MapLocation } from '@element-plus/icons-vue'
+import { House, Setting, Expand, Fold, ArrowDown, Crop, Grid, MapLocation, Document } from '@element-plus/icons-vue'
 
 // 当前选中的菜单项
 const activeMenu = ref('dashboard')
@@ -112,6 +117,7 @@ watch(() => route.path, (newPath) => {
     '/main/farm-plot': 'farm-plot',
     '/main/task': 'task',
     '/main/harvest': 'harvest',
+    '/main/sell': 'sell',
     '/main/settings': 'settings'
   }
   
@@ -133,6 +139,7 @@ function onSelectMenu(index: string) {
     'farm-plot': '/main/farm-plot',
     'task': '/main/task',
     'harvest': '/main/harvest',
+    'sell': '/main/sell',
     'settings': '/main/settings'
   }
   
