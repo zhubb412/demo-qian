@@ -102,9 +102,25 @@
                     <span class="label">轮作物：</span>
                     <span>{{ item.lunzuowu || '--' }}</span>
                     </div>
+                    <div class="info-item">
+                      <el-icon><Menu /></el-icon>
+                    <span class="label">负责人：</span>
+                    <span>{{ item.farmplotFzr || '--' }}</span>
+                    </div>
+                    <div class="info-item">
+                      <el-icon><Menu /></el-icon>
+                    <span class="label">种植面积：</span>
+                    <span>{{ item.farmplotArea ? item.farmplotArea + '亩' : '--' }}</span>
+                    </div>
+                    <div class="info-item">
+                      <el-icon><Menu /></el-icon>
+                    <span class="label">开始时间：</span>
+                    <span>{{ item.createTime || '--' }}</span>
+                    </div>
+
                   </div>
                   <div class="batch-card-actions">
-                    <el-button size="small" type="primary" :icon="Plus" @click="handleAdd(item)">新增</el-button>
+                    <el-button v-if="!item.isHarvested" size="small" type="primary" :icon="Plus" @click="handleAdd(item)">新增</el-button>
                     <el-button size="small" type="success" :icon="Edit" @click="handleEdit(item)">编辑</el-button>
                   </div>
                 </div>
@@ -163,7 +179,7 @@
           <el-form-item label="作物重量" prop="classWeight">
             <el-input
               v-model="harvestForm.classWeight"
-              placeholder="请输入作物重量"
+              placeholder="请输入作物重量(kg)"
               clearable
             />
           </el-form-item>
@@ -211,6 +227,7 @@
   import { farmTaskList, type FarmTaskDTOItem } from '@/api/farmTaskApi'
   import { farmPlotList, type FarmPlotItem } from '@/api/farmPlotApi'
   import { HarvestItemApi, type HarvestItem } from '@/api/harvestApi'
+  import { classManagementList, type CategoryItem } from '@/api/classManagementApi'
 
   // 查询参数
     const queryParams = reactive({
@@ -225,6 +242,9 @@
     farmplotName: string
     className: string
     lunzuowu: string // 轮作物
+    farmplotFzr: string // 负责人
+    farmplotArea: number | null // 种植面积
+    createTime: string // 开始时间
     classImg?: string[] // 改为数组，支持多张图片轮播
     taskCount: number
     completedTaskCount: number
@@ -240,11 +260,12 @@
    * 获取可收获地块列表
    * 流程：
    * 1. 获取所有地块列表
-   * 2. 遍历每个地块，调用 RenWuDTO 获取该地块下的所有任务
-   * 3. 检查每个地块下的所有任务状态是否都是 '1'（已完成）
-   * 4. 如果所有任务都完成，则将该地块添加到可收获列表
-   * 5. 应用筛选条件（地块ID、作物名称）
-   * 6. 进行分页处理
+   * 2. 获取种类管理列表（用于匹配作物图片）
+   * 3. 遍历每个地块，调用 RenWuDTO 获取该地块下的所有任务
+   * 4. 检查每个地块下的所有任务状态是否都是 '1'（已完成）
+   * 5. 如果所有任务都完成，则将该地块添加到可收获列表
+   * 6. 应用筛选条件（地块ID、作物名称）
+   * 7. 进行分页处理
    */
   async function getList() {
     try {
@@ -258,28 +279,46 @@
         return
       }
 
-      // 2. 初始化可收获地块列表
+      // 2. 获取种类管理列表，用于匹配作物图片
+      let categoryList: CategoryItem[] = []
+      try {
+        const categoryRes = await classManagementList.listclassManagement({ current: 1, size: 1000 })
+        categoryList = categoryRes?.records || []
+      } catch (error) {
+        console.error('获取种类管理列表失败:', error)
+      }
+
+      // 3. 初始化可收获地块列表
       const readyHarvestPlots: ReadyHarvestItem[] = []
 
-      // 3. 遍历每个地块，检查任务完成情况
+      // 4. 遍历每个地块，检查任务完成情况
       for (const plot of plotRes.records) {
         try {
-          // 3.1 获取该地块下的所有任务
+          // 4.1 获取该地块下的所有任务
           const taskRes = await farmTaskList.RenWuDTO(plot.farmplotId)
           const res = taskRes as any
           
-          // 3.2 解析任务列表（兼容不同的返回格式：records、data 或直接数组）
+          // 4.2 解析任务列表（兼容不同的返回格式：records、data 或直接数组）
           const tasks: FarmTaskDTOItem[] = res?.records || res?.data || (Array.isArray(taskRes) ? taskRes : [])
           
-          // 3.3 检查该地块下的所有任务是否都已完成（状态都是 '1'）
+          // 4.3 检查该地块下的所有任务是否都已完成（状态都是 '1'）
           if (tasks.length > 0 && tasks.every(task => String(task.status) === '1')) {
             // 获取地块ID（优先从任务数据中获取）
             const farmId = tasks[0]?.farmId || plot.farmplotId
             
-            // 处理图片：将 farmplotImage 按 | 分隔符分割成数组
-            const classImg: string[] = plot.farmplotImage ? plot.farmplotImage.split('|').filter(img => img.trim()) : []
+            // 处理图片：根据 farmplotZuowu 匹配种类管理中的 classImage
+            let classImg: string[] = []
+            const farmplotZuowu = plot.farmplotZuowu || ''
             
-            // 3.4 检查该地块是否已有收获记录
+            // 在种类管理列表中查找匹配的作物
+            const matchedCategory = categoryList.find(category => category.className === farmplotZuowu)
+            
+            if (matchedCategory && matchedCategory.classImage) {
+              // 如果找到匹配的种类且有关联图片，使用该图片
+              classImg = [matchedCategory.classImage]
+            }
+            
+            // 4.4 检查该地块是否已有收获记录
             let isHarvested = false
             try {
               const harvestRes = await HarvestItemApi.getHarvestItemList({
@@ -293,13 +332,16 @@
               console.error(`查询地块 ${farmId} 的收获记录失败:`, error)
             }
             
-            // 3.5 将可收获地块添加到列表
+            // 4.5 将可收获地块添加到列表
             readyHarvestPlots.push({
               farmId,
               farmplotId: plot.farmplotId,
               farmplotName: plot.farmplotName || `地块${plot.farmplotId}`,
               className: plot.farmplotZuowu || '', // 直接使用 farmplotZuowu
               lunzuowu: plot.farmplotLunzuowu || '', // 轮作物
+              farmplotFzr: plot.farmplotFzr || '', // 负责人
+              farmplotArea: plot.farmplotArea, // 种植面积
+              createTime: plot.createTime || '', // 开始时间
               classImg: classImg.length > 0 ? classImg : undefined, // 只有有图片时才赋值
               taskCount: tasks.length,
               completedTaskCount: tasks.length, // 所有任务都已完成，所以等于任务总数
@@ -451,6 +493,12 @@
     await harvestFormRef.value.validate(async (valid) => {
       if (valid && currentItem.value) {
         try {
+          // 获取匹配到的图片URL，将数组转换为字符串（用 | 分隔）
+          let classImgStr = ''
+          if (currentItem.value.classImg && currentItem.value.classImg.length > 0) {
+            classImgStr = currentItem.value.classImg.join('|')
+          }
+          
           const harvestData: HarvestItem = {
             id: 0,
             farmId: currentItem.value.farmId,
@@ -459,7 +507,7 @@
             shouhuoTime: harvestForm.shouhuoTime,
             remark: harvestForm.remark || '',
             status: '',
-            classImg: ''
+            classImg: classImgStr
           }
 
           if (isEditMode.value) {
