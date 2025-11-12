@@ -16,7 +16,7 @@
           <span>仪表盘</span>
         </el-menu-item>
         <el-menu-item index="class-management">
-          <el-icon><Category /></el-icon>
+          <el-icon><Calendar /></el-icon>
           <span>种类管理</span>
         </el-menu-item>
         <el-menu-item index="crop-rotation">
@@ -46,7 +46,14 @@
           <el-icon><Document /></el-icon>
           <span>销售记录</span>
         </el-menu-item>
-
+        <el-menu-item index="bill">
+          <el-icon><Document /></el-icon>
+          <span>账单管理</span>
+        </el-menu-item>
+        <el-menu-item index="history">
+          <el-icon><Document /></el-icon>
+          <span>历史种植</span>
+        </el-menu-item>
         <el-menu-item index="settings">
           <el-icon><Setting /></el-icon>
           <span>系统设置</span>
@@ -96,7 +103,7 @@ import { ref, watch } from 'vue'
 import { ElMessageBox } from 'element-plus'
 import { useRouter, useRoute } from 'vue-router'
 // 引入 Element Plus 图标并在本组件中直接使用
-import { House, Setting, Expand, Fold, ArrowDown, Crop, Grid, MapLocation, Document } from '@element-plus/icons-vue'
+import { House, Setting, Expand, Fold, ArrowDown, Crop, Grid, MapLocation, Document, Calendar } from '@element-plus/icons-vue'
 
 // 当前选中的菜单项
 const activeMenu = ref('dashboard')
@@ -118,6 +125,8 @@ watch(() => route.path, (newPath) => {
     '/main/task': 'task',
     '/main/harvest': 'harvest',
     '/main/sell': 'sell',
+    '/main/history': 'history',
+    '/main/bill': 'bill',
     '/main/settings': 'settings'
   }
   
@@ -140,6 +149,8 @@ function onSelectMenu(index: string) {
     'task': '/main/task',
     'harvest': '/main/harvest',
     'sell': '/main/sell',
+    'history': '/main/history',
+    'bill': '/main/bill',
     'settings': '/main/settings'
   }
   

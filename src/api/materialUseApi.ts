@@ -5,7 +5,10 @@ export interface MaterialUseItem {
     id?: number;
     taskId: number;
     materialId: number;
+    plotId: number;
     useAge: string;
+    useZongjia: string;
+    usePlotzj: string;
     materialName: string;
     measureUnit: string;
     kaishiTime: string;
@@ -21,6 +24,8 @@ export interface MaterialUseDTOItem {
     jiesuTime: string;
     materialJg: string;
     measureUnit: string;
+    useZongjia: string;
+    usePlotzj: string;
 }
 
 export interface MaterialUseDTOItemResult<T> {

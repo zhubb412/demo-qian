@@ -8,6 +8,10 @@ export interface FarmPlotItem {
     classId1: number;
     classId2: number;
     farmplotName: string;
+    farmplotJiage:string;
+    farmplotZongjia:string;
+    farmplotSyliang:string;
+    farmplotSyzongjia: string;
     farmplotZuowu: string;
     farmplotLunzuowu: string;
     farmplotCount: number | null;       
@@ -43,6 +47,9 @@ export interface FarmPlotDTOItem {
     classAdapt: string;
     rotationName: string;
     rotationImage: string;
+    farmplotJiage:string;
+    farmplotZongjia:string;
+    farmplotSyliang:string;
 }
 
 //获取所有地块 模糊查询一起 支持分页

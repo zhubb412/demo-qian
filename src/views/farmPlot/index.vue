@@ -113,13 +113,30 @@
                 <span class="detail-value">{{ category.farmplotLunzuowu }}</span>
               </div>
 
+              <!-- 作物种植使用量 -->
+              <div class="detail-item">
+                <el-icon class="detail-icon">
+                  <Crop />
+                </el-icon>
+                <span class="detail-label">作物种植使用量:</span>
+                <span class="detail-value">{{ category.farmplotSyliang }}</span>
+              </div>
+
               <!-- 地块面积 -->
               <div class="detail-item">
                 <el-icon class="detail-icon">
                   <Grid />
                 </el-icon>
-                <span class="detail-label">地块面积(亩):</span>
-                <span class="detail-value">{{ category.farmplotArea }}</span>
+                <span class="detail-label">地块面积:</span>
+                <span class="detail-value">{{ category.farmplotArea }} (亩)</span>
+              </div>
+              <!-- 地块价格 -->
+              <div class="detail-item">
+                <el-icon class="detail-icon">
+                  <Grid />
+                </el-icon>
+                <span class="detail-label">地块价格:</span>
+                <span class="detail-value">{{ category.farmplotJiage }} (元/亩)</span>
               </div>
 
 
@@ -243,6 +260,15 @@
             />
           </el-form-item>
 
+          <!-- 作物种植使用量 -->
+          <el-form-item label="作物种植使用量" prop="farmplotSyliang">
+            <el-input 
+              v-model="formData.farmplotSyliang" 
+              placeholder="请输入作物种植使用量"
+              clearable
+            />
+          </el-form-item>
+
           <!-- 轮作作物 - 隐藏字段，不显示在界面上 -->
           <el-form-item v-show="false" prop="farmplotLunzuowu">
             <el-input v-model="formData.farmplotLunzuowu" />
@@ -280,6 +306,14 @@
               placeholder=""
               readonly
         
+            />
+          </el-form-item>
+          <!-- 地块价格 -->
+          <el-form-item label="地块价格" prop="farmplotJiage">
+            <el-input 
+              v-model="formData.farmplotJiage" 
+              placeholder="请输入地块价格"
+              clearable
             />
           </el-form-item>
           
@@ -390,7 +424,7 @@
   <script lang="ts">
   import { ref, watch, computed } from 'vue';
   import { ElMessage } from 'element-plus';
-  import { Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus, MapLocation, Picture } from '@element-plus/icons-vue';
+  import { Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus, MapLocation, Picture, Crop } from '@element-plus/icons-vue';
   import { farmPlotList, type FarmPlotItem, type PaginationResult, type FarmPlotDTOItem } from '@/api/farmPlotApi';
   import { sysUserList, type SysUserItem } from '@/api/sysUserApi';
   // 使用API中定义的接口类型
@@ -522,6 +556,9 @@
         farmplotLunzuowu: '', // 轮作作物
         classId1: null as number | null, // 轮作计划中的第一个作物ID
         classId2: null as number | null, // 轮作计划中的第二个作物ID
+        farmplotJiage: '', // 地块价格
+        farmplotZongjia: '', // 地块总价
+        farmplotSyliang: '', // 地块剩余面积
       });
       
       /** 表单验证规则 */
@@ -600,6 +637,9 @@
         classId1: 0,
         classId2: 0,
         farmplotName: '',
+        farmplotJiage: '',
+        farmplotZongjia: '',
+        farmplotSyliang: '',
         farmplotZuowu: '',
         farmplotLunzuowu: '',
         farmplotCount: 0,        
@@ -764,6 +804,9 @@
           farmplotCount: null,        
           farmplotArea: null,         
           farmplotShengarea: null,    
+          farmplotJiage: '',
+          farmplotZongjia: '',
+          farmplotSyliang: '',
           farmplotPosition: '',
           farmplotFzr: '',
           createTime: '',
@@ -800,6 +843,9 @@
           farmplotCount: category.farmplotCount || null,
           farmplotArea: category.farmplotArea || null,
           farmplotShengarea: category.farmplotShengarea || null,
+          farmplotJiage: category.farmplotJiage || '',
+          farmplotZongjia: category.farmplotZongjia || '',
+          farmplotSyliang: category.farmplotSyliang || '',
           farmplotPosition: category.farmplotPosition,
           farmplotFzr: category.farmplotFzr,
           createTime: category.createTime,
@@ -840,6 +886,8 @@
           farmplotImage: formData.value.farmplotImage || null,
           classId1: formData.value.classId1 || 0,
           classId2: formData.value.classId2 || 0,
+          farmplotJiage: formData.value.farmplotJiage || '',
+          farmplotSyliang: formData.value.farmplotSyliang || '',
           createBy: null,
           updateBy: null,
           updateTime: null

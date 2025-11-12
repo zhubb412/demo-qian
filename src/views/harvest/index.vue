@@ -1,4 +1,5 @@
 <template>
+  <!-- 收获管理页面 -->
     <div class="app-container-sm">
       <!-- 查询表单 -->
       <el-card class="card-margin-bottom">
@@ -121,7 +122,16 @@
                   </div>
                   <div class="batch-card-actions">
                     <el-button v-if="!item.isHarvested" size="small" type="primary" :icon="Plus" @click="handleAdd(item)">新增</el-button>
-                    <el-button size="small" type="success" :icon="Edit" @click="handleEdit(item)">编辑</el-button>
+                    <el-button v-if="item.isHarvested" size="small" type="success" :icon="Edit" @click="handleEdit(item)">编辑</el-button>
+                    <el-button
+                      v-if="item.isHarvested"
+                      size="small"
+                      type="danger"
+                      :icon="Delete"
+                      @click="handleDelete(item)"
+                    >
+                      删除
+                    </el-button>
                   </div>
                 </div>
               </el-card>
@@ -215,14 +225,15 @@
 
   <script setup lang="ts">
   import { ref, reactive, onMounted } from 'vue'
-    import { ElMessage } from 'element-plus'
+    import { ElMessage, ElMessageBox } from 'element-plus'
     import type { FormInstance, FormRules } from 'element-plus'
     import {
       Menu,
       Plus,
       Edit,
       Search,
-      Refresh
+      Refresh,
+      Delete
     } from '@element-plus/icons-vue'
   import { farmTaskList, type FarmTaskDTOItem } from '@/api/farmTaskApi'
   import { farmPlotList, type FarmPlotItem } from '@/api/farmPlotApi'
@@ -249,6 +260,7 @@
     taskCount: number
     completedTaskCount: number
     isHarvested?: boolean // 是否已收获
+    harvestId?: number // 收获记录ID （后端返回的id 暂存在harvestId方便操作）
   }
 
   const harvestList = ref<ReadyHarvestItem[]>([])
@@ -320,12 +332,14 @@
             
             // 4.4 检查该地块是否已有收获记录
             let isHarvested = false
+            let harvestId: number | undefined
             try {
               const harvestRes = await HarvestItemApi.getHarvestItemList({
                 farmId: farmId
               })
               if (harvestRes?.records && harvestRes.records.length > 0) {
                 isHarvested = true
+                harvestId = harvestRes.records[0].id
               }
             } catch (error) {
               // 如果查询失败，默认为未收获
@@ -345,7 +359,8 @@
               classImg: classImg.length > 0 ? classImg : undefined, // 只有有图片时才赋值
               taskCount: tasks.length,
               completedTaskCount: tasks.length, // 所有任务都已完成，所以等于任务总数
-              isHarvested // 是否已收获
+              isHarvested, // 是否已收获
+              harvestId
             })
           }
         } catch (error) {
@@ -527,27 +542,40 @@
             // 新增模式
             await HarvestItemApi.addHarvestItem(harvestData)
             ElMessage.success('新增成功')
-            
-            // 更新对应卡片的状态为已收获
-            if (currentItem.value) {
-              const itemIndex = harvestList.value.findIndex(
-                item => item.farmId === currentItem.value!.farmId
-              )
-              if (itemIndex !== -1) {
-                harvestList.value[itemIndex].isHarvested = true
-              }
-            }
           }
           
           dialogVisible.value = false
-          // 可以在这里刷新列表，如果需要的话
-          // getList()
+          // 刷新列表以更新状态和按钮
+          await getList()
         } catch (error) {
           console.error('操作失败:', error)
           ElMessage.error('操作失败')
         }
       }
     })
+  }
+
+  // 删除收获记录
+  async function handleDelete(item: ReadyHarvestItem) {
+    if (!item.harvestId) {
+      ElMessage.warning('未找到可删除的记录')
+      return
+    }
+
+    try {
+      await ElMessageBox.confirm('确定删除该收获记录吗？', '提示', {
+        type: 'warning'
+      })
+
+      await HarvestItemApi.deleteHarvestItem(item.harvestId)
+      ElMessage.success('删除成功')
+      await getList()
+    } catch (error) {
+      if (error !== 'cancel' && error !== 'close') {
+        console.error('删除失败:', error)
+        ElMessage.error('删除失败')
+      }
+    }
   }
 
   // 对话框关闭

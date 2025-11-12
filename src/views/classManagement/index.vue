@@ -109,6 +109,14 @@
               <el-icon class="detail-icon">
                 <Grid />
               </el-icon>
+              <span class="detail-label">作物价格:</span>
+              <span class="detail-value">{{ category.classJiage }}(元)</span>
+            </div>
+
+            <div class="detail-item">
+              <el-icon class="detail-icon">
+                <Grid />
+              </el-icon>
               <span class="detail-label">适合种植月份:</span>
               <span class="detail-value">{{ category.classPlanting }}</span>
             </div>
@@ -204,7 +212,16 @@
             clearable
           />
         </el-form-item>
-        
+
+        <!-- 作物价格 -->
+        <el-form-item label="作物价格" prop="classJiage">
+          <el-input 
+            v-model="formData.classJiage" 
+            placeholder="请输入作物价格"
+            clearable
+          />
+        </el-form-item>
+
         <!-- 创建时间 -->
         <el-form-item label="创建时间" prop="createTime">
           <el-date-picker
@@ -220,7 +237,7 @@
             <!-- 适配作物 -->
             <el-form-item label="适配作物" prop="classType">
           <el-input 
-            v-model="formData.classAdapt" 
+            v-model="formData.classType" 
             placeholder="请输入适配作物"
             clearable
           />
@@ -394,7 +411,8 @@ export default {
       classImage: '',
       classAdapt: '',
       classPlanting: '',
-      classHarvest: ''
+      classHarvest: '',
+      classJiage: ''
     });
     
     /** 表单验证规则 */
@@ -413,6 +431,9 @@ export default {
       ],
       classHarvest: [
         { required: true, message: '请选择适合收获月份', trigger: 'change' }
+      ],
+      classJiage: [
+        { required: true, message: '请输入作物价格', trigger: 'blur' }
       ]
     };
     
@@ -430,7 +451,8 @@ export default {
       createBy: null,
       updateBy: null,
       updateTime: null,
-      status: null
+      status: null,
+      classJiage: null
     });
     
     /** 任务管理对话框显示状态 */
@@ -524,7 +546,8 @@ export default {
         classImage: '',
         classAdapt: '',
         classPlanting: '',
-        classHarvest: ''
+        classHarvest: '',
+        classJiage: ''
       };
       
       // 显示对话框
@@ -551,7 +574,8 @@ export default {
         classImage: category.classImage || '',
         classAdapt: category.classAdapt || '',
         classPlanting: category.classPlanting || '',
-        classHarvest: category.classHarvest || ''
+        classHarvest: category.classHarvest || '',
+        classJiage: category.classJiage || ''
       };
       
       // 显示对话框
@@ -603,7 +627,8 @@ export default {
         createBy: null,
         updateBy: null,
         updateTime: null,
-        status: null
+        status: null,
+        classJiage: formData.value.classJiage || null
       };
     };
 

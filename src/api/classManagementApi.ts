@@ -11,6 +11,7 @@ export interface CategoryItem {
     classId: number;
     className: string;
     classType: string;
+    classJiage: string | null;
     classImage: string | null;
     classAdapt: string | null;
     classPlanting: string | null;
