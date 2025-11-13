@@ -15,6 +15,10 @@
           <el-icon><House /></el-icon>
           <span>仪表盘</span>
         </el-menu-item>
+        <el-menu-item index="agriculture-material">
+          <el-icon><Crop /></el-icon>
+          <span>农资管理</span>
+        </el-menu-item>
         <el-menu-item index="class-management">
           <el-icon><Calendar /></el-icon>
           <span>种类管理</span>
@@ -27,11 +31,6 @@
           <el-icon><MapLocation /></el-icon>
           <span>地块管理</span>
         </el-menu-item>
-        <el-menu-item index="agriculture-material">
-          <el-icon><Crop /></el-icon>
-          <span>农资管理</span>
-        </el-menu-item>
-
         <el-menu-item index="task">
           <el-icon><Crop /></el-icon>
           <span>种植任务</span>

@@ -6,13 +6,24 @@ export interface HistoryItem {
     classId: number;
     plotId: number;
     historyPlot: string;
+    historyLx?: string;
     historyName: string;
+    historyMj?: string;
+    historyWzhi?: string;
     historyRen: string;
     historyChanliang: string;
-    historyShoumai: string;
-    historyAge: string;
-    historyYkui: string;
+    historyShoumai?: string;
+    historyAge?: string;
+    historyCb?: string;
+    historyYkui?: string;
     historyTime: string;
+}
+
+export interface HistoryDTO {
+    plotId: number;
+    farmId: number;
+    classWeight: string;
+    billAge: string;
 }
 
 //分页响应接口
@@ -24,11 +35,15 @@ export interface PaginationResult<T> {
     pages: number;
 }
 
+export interface HistoryQuery {
+    current?: number;
+    size?: number;
+    historyPlot?: string;
+    historyName?: string;
+}
+
 export class historyList {
-    static listHistory(params?:{
-        current?: number;
-        size?: number;
-    }){
+    static listHistory(params?: HistoryQuery){
         return request.get<PaginationResult<HistoryItem>>({
             url: '/history/list',
             params
@@ -49,6 +64,12 @@ export class historyList {
     static deleteHistory(id: number){
         return request.delete<BaseResult>({
             url: `/history/${id}`
+        })
+    }
+    static listHistoryDTO(params?: HistoryDTO){
+        return request.get<BaseArrayResult<HistoryDTO>>({
+            url: '/history/listDTO',
+            params
         })
     }
 }
