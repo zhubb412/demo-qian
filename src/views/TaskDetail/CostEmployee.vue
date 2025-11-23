@@ -448,7 +448,11 @@ const disableWorkingFinishDate = (time: Date) => {
 // 获取雇员列表（用于下拉选择）
 const getEmployeeList = async () => {
   try {
-    const response = await sysUserList.listSysUser()
+    const response = await sysUserList.listSysUser({
+      current: 1,
+      size: 1000,
+      userName: ''
+    })
     const rawData = (response as any)?.records || (response as any)?.data || response || []
     employeeList.value = Array.isArray(rawData) ? rawData : []
   } catch (error) {

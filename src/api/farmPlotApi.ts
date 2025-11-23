@@ -24,7 +24,7 @@ export interface FarmPlotItem {
     createBy: string | null;
     updateBy: string | null;
     updateTime: string | null;
-    farmplotImage?: string | null; // 地块图片，根据选择的轮作计划自动填充
+    farmplotImage?: string | null; 
 }
 
 //分页响应接口

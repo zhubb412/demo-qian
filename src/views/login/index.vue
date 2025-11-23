@@ -78,137 +78,201 @@
 </template>
 
 <script setup lang="ts">
-// 引入：Vue 响应式工具 & Element Plus 图标
+// 引入Vue响应式工具函数
 import { reactive, ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+// 引入Vue Router的导航函数
+import { useRouter, useRoute } from 'vue-router'
+// 引入Element Plus图标组件
 import { User, Lock } from '@element-plus/icons-vue'
+// 引入登录API
 import { LoginApi } from '@/api/loginApi'
 
-// 类型：登录表单字段
+// 类型定义：登录表单字段
 type LoginForm = {
-  username: string
-  password: string
+  username: string // 用户名
+  password: string // 密码
 }
 
-// 类型：注册表单字段
+// 类型定义：注册表单字段
 type RegisterForm = {
-  username: string
-  password: string
-  confirmPassword: string
+  username: string // 用户名
+  password: string // 密码
+  confirmPassword: string // 确认密码
 }
 
-// 类型：错误信息映射
+// 类型定义：错误信息映射对象
 type ErrorState = Partial<Record<'username' | 'password' | 'confirmPassword', string>>
 
-// 状态：当前 Tab 与密码显示（保留以备扩展）
+// 状态管理：当前激活的Tab（登录或注册）
 const activeTab = ref<'login' | 'register'>('login')
+// 状态管理：是否显示密码（保留以备扩展）
 const showPassword = ref(false)
 
-// 表单：登录
+// 响应式表单对象：登录表单
 const loginForm = reactive<LoginForm>({
-  username: '',
-  password: ''
+  username: '', // 用户名初始值为空
+  password: '' // 密码初始值为空
 })
 
-// 表单：注册
+// 响应式表单对象：注册表单
 const registerForm = reactive<RegisterForm>({
-  username: '',
-  password: '',
-  confirmPassword: ''//确认密码
+  username: '', // 用户名初始值为空
+  password: '', // 密码初始值为空
+  confirmPassword: '' // 确认密码初始值为空
 })
 
-// 错误信息容器
+// 响应式错误信息容器：存储表单验证错误信息
 const errors = reactive<ErrorState>({})
 
-// 计算属性：根据 Tab 返回当前表单对象
+// 计算属性：根据当前Tab返回对应的表单对象
 const currentForm = computed<LoginForm | RegisterForm>(() => {
+  // 如果是登录Tab，返回登录表单；否则返回注册表单
   return activeTab.value === 'login' ? loginForm : registerForm
 })
 
-// 工具：清空错误
+// 工具函数：清空所有错误信息
 function resetErrors() {
+  // 遍历错误对象的所有键，删除每个错误信息
   Object.keys(errors).forEach((k) => delete (errors as any)[k])
 }
 
-// 校验：用户名、密码长度、注册时确认密码一致
+// 表单验证函数：验证表单字段是否合法
 function validate(): boolean {
+  // 先清空之前的错误信息
   resetErrors()
+  // 判断当前是否为登录模式
   const isLogin = activeTab.value === 'login'
+  // 获取当前表单对象（转换为注册表单类型以支持所有字段）
   const form = currentForm.value as RegisterForm
 
+  // 验证用户名：如果为空，添加错误信息
   if (!form.username) {
     errors.username = '请输入用户名'
   }
+  // 验证密码：如果为空，添加错误信息
   if (!form.password) {
     errors.password = '请输入密码'
   } 
+  // 如果是注册模式，需要验证确认密码
   if (!isLogin) {
+    // 如果确认密码为空，添加错误信息
     if (!form.confirmPassword) {
       errors.confirmPassword = '请再次输入密码'
-    } else if (form.confirmPassword !== form.password) {
+    } 
+    // 如果确认密码与密码不一致，添加错误信息
+    else if (form.confirmPassword !== form.password) {
       errors.confirmPassword = '两次输入的密码不一致'
     }
   }
 
+  // 如果错误对象中没有错误（长度为0），返回true表示验证通过
   return Object.keys(errors).length === 0
 }
 
-// 提交：登录成功后写入 token 并跳转到主页面
+// 获取路由实例：用于编程式导航
 const router = useRouter()
+// 获取当前路由对象：用于获取查询参数
+const route = useRoute()
+
+// 表单提交函数：处理登录和注册逻辑
 function onSubmit() {
+  // 先进行表单验证，如果验证失败则直接返回
   if (!validate()) return
+  
+  // 判断当前是登录还是注册
   if (activeTab.value === 'login') {
+    // 登录逻辑
     console.log('登录提交', { ...loginForm })
-    // 调用登录接口
+    // 调用登录API
     LoginApi.login(loginForm).then(res => {
-      console.log(res)
+      // 打印完整的响应数据，方便调试查看后端返回的结构
+      console.log('登录接口完整响应:', res)
+      // 打印响应数据的结构，查看token在哪里
+      console.log('响应数据结构:', {
+        code: res.code,
+        msg: res.msg,
+        data: res.data,
+        'res.data类型': typeof res.data,
+        'res.data?.token': res.data?.token
+      })
+      // 判断响应状态码是否为200（成功）
       if (String(res.code) === '200') {
-        // 登录成功：写入 token
-        localStorage.setItem('token', res.data?.token || 'mock-token')
-        // 跳转到主页面
-        router.replace('/main')
+        // 从响应数据中提取token
+        // 注意：token可能在 res.data.token 或 res.data 中，根据后端返回结构调整
+        const token = res.data?.token || res.data || 'mock-token'
+        console.log('提取到的token:', token)
+        // 登录成功：将token存储到本地存储
+        // LocalStorage 是浏览器提供的一种持久化本地存储机制
+        localStorage.setItem('token', token)
+        // 验证token是否成功存储
+        const storedToken = localStorage.getItem('token')
+        console.log('已存储到localStorage的token:', storedToken)
+        
+        // 获取路由查询参数中的redirect（重定向地址）
+        const redirect = route.query.redirect as string
+        // 如果存在重定向地址，跳转到该地址；否则跳转到主页面
+        const targetPath = redirect || '/main'
+        // 使用replace方法跳转，避免在历史记录中留下登录页
+        router.replace(targetPath)
       } else {
+        // 登录失败：显示错误提示
         alert(res.msg || '登录失败')
       }
     }).catch(err => {
+      // 捕获登录过程中的异常
       console.error('登录失败:', err)
+      // 显示通用错误提示
       alert('登录失败，请稍后重试')
     })
   } else {
+    // 注册逻辑
     console.log('注册提交', { ...registerForm })
+    // 调用注册API
     LoginApi.register(registerForm).then(res => {
       console.log(res)
+      // 判断响应状态码是否为200（成功）
       if (String(res.code) === '200') {
+        // 注册成功：显示成功提示
         alert('注册成功')
-        // 注册成功后切换到登录页面
+        // 切换到登录Tab
         activeTab.value = 'login'
+        // 重置表单
         onReset()
       } else {
+        // 注册失败：显示错误提示
         alert(res.msg || '注册失败')
       }
     }).catch(err => {
+      // 捕获注册过程中的异常
       console.error('注册失败:', err)
+      // 显示通用错误提示
       alert('注册失败，请稍后重试')
     })
   }
 }
 
-// 重置：根据当前 Tab 清空对应表单
+// 重置表单函数：根据当前Tab清空对应的表单数据
 function onReset() {
+  // 先清空所有错误信息
   resetErrors()
+  // 根据当前Tab重置对应的表单
   if (activeTab.value === 'login') {
+    // 重置登录表单
     loginForm.username = ''
     loginForm.password = ''
   } else {
+    // 重置注册表单
     registerForm.username = ''
     registerForm.password = ''
     registerForm.confirmPassword = ''
   }
 }
 
-// 切换 Tab：顺带清空表单
+// 切换Tab函数：在登录和注册之间切换
 function toggleTab() {
+  // 切换Tab：如果当前是登录，切换到注册；否则切换到登录
   activeTab.value = activeTab.value === 'login' ? 'register' : 'login'
+  // 切换Tab后重置表单
   onReset()
 }
 </script>

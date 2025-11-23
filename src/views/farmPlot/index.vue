@@ -38,32 +38,16 @@
           :key="category.farmplotId" 
           class="category-card"
         >
-          <!-- 地块图片轮播区域 -->
+          <!-- 地块图片显示区域 -->
           <div class="card-image">
-            <!-- 有图片时显示轮播 -->
-            <div v-if="getImageList(category.farmplotImage || null).length > 0" class="card-carousel-wrapper">
-              <el-carousel 
-                :interval="3000" 
-                :autoplay="true" 
-                height="200px"
-                indicator-position="outside"
-                :arrow="getImageList(category.farmplotImage || null).length > 1 ? 'hover' : 'never'"
-              >
-                <el-carousel-item 
-                  v-for="(image, index) in getImageList(category.farmplotImage || null)" 
-                  :key="index"
-                >
-                  <div class="card-carousel-image-container">
-                    <el-image 
-                      :src="image" 
-                      class="card-carousel-image"
-                      fit="cover"
-                    />
-                  </div>
-                </el-carousel-item>
-              </el-carousel>
-            </div>
-            <!-- 没有图片时显示默认图片 -->
+            <!-- 有图片时显示图片 -->
+            <el-image 
+              v-if="category.farmplotImage" 
+              :src="category.farmplotImage" 
+              class="category-image"
+              fit="cover"
+            />
+            <!-- 没有图片时显示默认占位符 -->
             <div v-else class="no-image">
               <el-icon size="48" color="#c0c4cc">
                 <Picture />
@@ -366,46 +350,7 @@
             />
           </el-form-item>
 
-          <!-- 作物图片显示 - 根据选择的轮作计划显示图片 -->
-          <el-form-item label="作物图片">
-            <div class="image-carousel-container">
-              <!-- 轮播展示 -->
-              <div v-if="displayedImages.length > 0" class="carousel-wrapper">
-                <el-carousel 
-                  :interval="2000" 
-                  :autoplay="true" 
-                  height="200px"
-                  indicator-position="outside"
-                >
-                  <el-carousel-item 
-                    v-for="(image, index) in displayedImages" 
-                    :key="index"
-                  >
-                    <!-- 图片容器 -->
-                    <div class="carousel-image-container">
-                      <!-- 图片组件，不支持预览功能 -->
-                      <el-image 
-                        :src="image" 
-                        class="carousel-image"
-                        fit="cover"
-                      />
-                    </div>
-                  </el-carousel-item>
-                </el-carousel>
-              </div>
-              
-              <!-- 无图片时的占位符 -->
-              <div v-else class="no-images-placeholder">
-                <div class="placeholder-icon">
-                  <el-icon size="48" color="#c0c4cc">
-                    <Picture />
-                  </el-icon>
-                </div>
-                
-                <div class="placeholder-tip">系统将自动填充对应的作物图片</div>
-              </div>
-            </div>
-          </el-form-item>
+        
         </el-form>
         
         <template #footer>
@@ -479,29 +424,6 @@
         return categories.value.length === 0;
       });
 
-      /**
-       * 计算并返回要显示的轮作图片URL数组
-       * 从 formData.farmplotImage 字段中解析图片URL
-       */
-      const displayedImages = computed(() => {
-        if (formData.value.farmplotImage) {
-          return formData.value.farmplotImage.split('|').filter(url => url.trim() !== '');
-        }
-        return [];
-      });
-
-      /**
-       * 获取图片列表（用于卡片轮播）
-       */
-      const getImageList = (imageData: string | null) => {
-        if (!imageData) return [];
-        // 如果包含分隔符，分割为数组
-        if (imageData.includes('|')) {
-          return imageData.split('|');
-        }
-        // 如果不包含分隔符，返回单张图片数组
-        return [imageData];
-      };
 
       /**
        * 根据轮作计划ID获取轮作计划名称
@@ -551,7 +473,7 @@
         createTime: '',
         remark: '',
         rotationId: null as number | null,  // 轮作计划ID - 关联到轮作计划表
-        farmplotImage: null as string | null, // 地块图片，根据选择的轮作计划自动填充
+        farmplotImage: null as string | null, // 地块图片，从后端返回的数据中获取
         farmplotZuowu: '', // 种植作物
         farmplotLunzuowu: '', // 轮作作物
         classId1: null as number | null, // 轮作计划中的第一个作物ID
@@ -559,6 +481,7 @@
         farmplotJiage: '', // 地块价格
         farmplotZongjia: '', // 地块总价
         farmplotSyliang: '', // 地块剩余面积
+        farmplotSyzongjia: '', // 作物种植使用总价
       });
       
       /** 表单验证规则 */
@@ -640,6 +563,7 @@
         farmplotJiage: '',
         farmplotZongjia: '',
         farmplotSyliang: '',
+        farmplotSyzongjia: '',
         farmplotZuowu: '',
         farmplotLunzuowu: '',
         farmplotCount: 0,        
@@ -807,6 +731,7 @@
           farmplotJiage: '',
           farmplotZongjia: '',
           farmplotSyliang: '',
+          farmplotSyzongjia: '',
           farmplotPosition: '',
           farmplotFzr: '',
           createTime: '',
@@ -846,6 +771,7 @@
           farmplotJiage: category.farmplotJiage || '',
           farmplotZongjia: category.farmplotZongjia || '',
           farmplotSyliang: category.farmplotSyliang || '',
+          farmplotSyzongjia: category.farmplotSyzongjia || '',
           farmplotPosition: category.farmplotPosition,
           farmplotFzr: category.farmplotFzr,
           createTime: category.createTime,
@@ -888,6 +814,7 @@
           classId2: formData.value.classId2 || 0,
           farmplotJiage: formData.value.farmplotJiage || '',
           farmplotSyliang: formData.value.farmplotSyliang || '',
+          farmplotSyzongjia: formData.value.farmplotSyzongjia || '',
           createBy: null,
           updateBy: null,
           updateTime: null
@@ -1039,14 +966,6 @@
         shengyuArea();
       });
 
-      // 监听轮作计划ID变化，更新地块图片
-      watch(() => formData.value.rotationId, (newRotationId) => {
-        // 根据轮作计划ID查找对应的轮作计划数据
-        const selectedPlan = newRotationId ? rotationPlans.value.find(plan => plan.classId === newRotationId) : null;
-        // 使用轮作计划的图片字段更新地块图片，如果没有则设为null
-        formData.value.farmplotImage = selectedPlan?.rotationImage || null;
-        console.log('轮作计划ID变化，更新图片:', formData.value.farmplotImage);
-      });
 
       // 组件初始化时加载数据
       fetchCategories();        // 获取地块列表
@@ -1068,8 +987,6 @@
         formData,
         formRules,
         showFarmTotalArea,
-        displayedImages,
-        getImageList,
         getRotationPlanName,
         handleRotationChange,
         fetchCategories,
@@ -1149,30 +1066,16 @@
     text-align: right;
   }
 
-  /* 图片轮播容器样式 */
-  .image-carousel-container {
+  /* 图片显示容器样式 */
+  .image-display-container {
     width: 100%;
   }
 
-  .carousel-wrapper {
-    border: 1px solid #e4e7ed;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #fff;
-  }
-
-  .carousel-image-container {
+  .form-image {
     width: 100%;
     height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #f5f7fa;
-  }
-
-  .carousel-image {
-    width: 100%;
-    height: 100%;
+    border: 1px solid #e4e7ed;
+    border-radius: 8px;
     object-fit: cover;
   }
 
@@ -1365,28 +1268,6 @@
     justify-content: flex-start !important;
   }
   
-  /* 卡片轮播样式 */
-  .card-carousel-wrapper {
-    position: relative;
-    width: 100%;
-    height: 200px;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .card-carousel-image-container {
-    width: 100%;
-    height: 200px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .card-carousel-image {
-    width: 100%;
-    height: 100%;
-    border-radius: 8px;
-  }
 
   /* 卡片网格布局 */
   .categories-grid {

@@ -252,7 +252,10 @@ const getHarvestList = async () => {
  */
 const getUserList = async () => {
   try {
-    const res = await sysUserList.listSysUser()
+    const res = await sysUserList.listSysUser({
+      current: 1,
+      size: 1000
+    })
     userList.value = res.records || []
   } catch (error) {
     console.error('获取用户列表失败:', error)

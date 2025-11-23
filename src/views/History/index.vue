@@ -70,7 +70,7 @@ const historyData = ref<HistoryItem[]>([])
 
 const queryParams = reactive({
   current: 1,
-  size: 10,
+  size: 15,
   historyPlot: '',
   historyName: ''
 })

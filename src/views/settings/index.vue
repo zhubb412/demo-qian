@@ -1,12 +1,12 @@
 <template>
   <div class="card">
-    <h2>系统设置</h2>
-    <p>这里是系统设置页面，您可以在这里配置系统参数。</p>
+    <h2>个人设置</h2>
+    <p>这里是个人设置页面，您可以在这里配置个人设置。</p>
   </div>
 </template>
 
 <script setup lang="ts">
-// 系统设置页面
+// 个人设置页面
 </script>
 
 <style scoped>

@@ -100,11 +100,6 @@
                     </div>
                     <div class="info-item">
                       <el-icon><Menu /></el-icon>
-                    <span class="label">轮作物：</span>
-                    <span>{{ item.lunzuowu || '--' }}</span>
-                    </div>
-                    <div class="info-item">
-                      <el-icon><Menu /></el-icon>
                     <span class="label">负责人：</span>
                     <span>{{ item.farmplotFzr || '--' }}</span>
                     </div>
@@ -115,8 +110,8 @@
                     </div>
                     <div class="info-item">
                       <el-icon><Menu /></el-icon>
-                    <span class="label">开始时间：</span>
-                    <span>{{ item.createTime || '--' }}</span>
+                    <span class="label">收获时间：</span>
+                    <span>{{ item.shouhuoTime || '--' }}</span>
                     </div>
 
                   </div>
@@ -196,10 +191,10 @@
           <el-form-item label="收获日期" prop="shouhuoTime">
             <el-date-picker
               v-model="harvestForm.shouhuoTime"
-              type="shouhuoTime"
-              placeholder="请选择收货日期"
-              format="YYYY-MM-DD"
-              value-format="YYYY-MM-DD"
+              type="datetime"
+              placeholder="请选择收获日期时间"
+              format="YYYY-MM-DD HH:mm:ss"
+              value-format="YYYY-MM-DD HH:mm:ss"
               style="width: 100%"
             />
           </el-form-item>
@@ -252,10 +247,9 @@
     farmplotId: number
     farmplotName: string
     className: string
-    lunzuowu: string // 轮作物
     farmplotFzr: string // 负责人
     farmplotArea: number | null // 种植面积
-    createTime: string // 开始时间
+    shouhuoTime?: string // 收获时间
     classImg?: string[] // 改为数组，支持多张图片轮播
     taskCount: number
     completedTaskCount: number
@@ -333,6 +327,7 @@
             // 4.4 检查该地块是否已有收获记录
             let isHarvested = false
             let harvestId: number | undefined
+            let shouhuoTime: string | undefined
             try {
               const harvestRes = await HarvestItemApi.getHarvestItemList({
                 farmId: farmId
@@ -340,6 +335,7 @@
               if (harvestRes?.records && harvestRes.records.length > 0) {
                 isHarvested = true
                 harvestId = harvestRes.records[0].id
+                shouhuoTime = harvestRes.records[0].shouhuoTime
               }
             } catch (error) {
               // 如果查询失败，默认为未收获
@@ -352,10 +348,9 @@
               farmplotId: plot.farmplotId,
               farmplotName: plot.farmplotName || `地块${plot.farmplotId}`,
               className: plot.farmplotZuowu || '', // 直接使用 farmplotZuowu
-              lunzuowu: plot.farmplotLunzuowu || '', // 轮作物
               farmplotFzr: plot.farmplotFzr || '', // 负责人
               farmplotArea: plot.farmplotArea, // 种植面积
-              createTime: plot.createTime || '', // 开始时间
+              shouhuoTime: shouhuoTime, // 收获时间
               classImg: classImg.length > 0 ? classImg : undefined, // 只有有图片时才赋值
               taskCount: tasks.length,
               completedTaskCount: tasks.length, // 所有任务都已完成，所以等于任务总数

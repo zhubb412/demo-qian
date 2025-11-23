@@ -15,12 +15,16 @@ export interface SysUserItem {
     userName: string;
     email: string;
     sex: string;
+    number: number;
+    createTime: string;
+    remark: string;
 }
 
 export class sysUserList {
-    static listSysUser(){
+    static listSysUser(params: any){
         return request.get<PaginationResult<SysUserItem>>({
-            url: '/sysUser/list'
+            url: '/sysUser/list',
+            params
         })
     }
 
