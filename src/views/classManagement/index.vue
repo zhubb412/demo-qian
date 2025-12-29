@@ -56,6 +56,17 @@
         :key="category.classId" 
         class="category-card"
       >
+        <!-- 种类名称，显示在图片上方 -->
+        <div class="category-name-header">
+          <div class="detail-item">
+            <el-icon class="detail-icon">
+              <CollectionTag />
+            </el-icon>
+            <span class="detail-label">种类名称:</span>
+            <span class="detail-value category-name-value">{{ category.className }}</span>
+          </div>
+        </div>
+        
         <!-- 种类图片区域 -->
         <div class="card-image">
           <el-image 
@@ -64,33 +75,16 @@
             class="category-image"
             fit="cover"
           />
-          <!-- 没有图片时显示默认图片 -->
-          <div v-else class="no-image">
-            <el-icon size="48" color="#c0c4cc">
-              <Picture />
-            </el-icon>
-            <span>暂无图片</span>
-          </div>
         </div>
         
         <!-- 卡片内容区域 -->
         <div class="card-content">
           <!-- 详细信息 -->
           <div class="card-details">
-
-            <!-- 种类名称 -->
-            <div class="detail-item">
-              <el-icon class="detail-icon">
-                <Grid />
-              </el-icon>
-              <span class="detail-label">种类名称:</span>
-              <span class="detail-value">{{ category.className }}</span>
-            </div>
-            
             <!-- 种类类型 -->
             <div class="detail-item">
               <el-icon class="detail-icon">
-                <Grid />
+                <Tickets />
               </el-icon>
               <span class="detail-label">种类类型:</span>
               <span class="detail-value">{{ category.classType }}</span>
@@ -99,7 +93,7 @@
             <!-- 适配作物 -->
             <div class="detail-item">
               <el-icon class="detail-icon">
-                <Grid />
+                <Finished />
               </el-icon>
               <span class="detail-label">适配作物:</span>
               <span class="detail-value">{{ category.classAdapt }}</span>
@@ -107,7 +101,7 @@
 
             <div class="detail-item">
               <el-icon class="detail-icon">
-                <Grid />
+                <Money />
               </el-icon>
               <span class="detail-label">作物价格:</span>
               <span class="detail-value">{{ category.classJiage }}元</span>
@@ -115,7 +109,7 @@
 
             <div class="detail-item">
               <el-icon class="detail-icon">
-                <Grid />
+                <Calendar />
               </el-icon>
               <span class="detail-label">适合种植月份:</span>
               <span class="detail-value">{{ category.classPlanting }}</span>
@@ -123,7 +117,7 @@
 
             <div class="detail-item">
               <el-icon class="detail-icon">
-                <Grid />
+                <Calendar />
               </el-icon>
               <span class="detail-label">适合收获月份:</span>
               <span class="detail-value">{{ category.classHarvest }}</span>
@@ -132,19 +126,19 @@
             <!-- 创建时间 -->
             <div class="detail-item">
               <el-icon class="detail-icon">
-                <Calendar />
+                <Clock />
               </el-icon>
               <span class="detail-label">创建时间:</span>
               <span class="detail-value">{{ category.createTime }}</span>
             </div>
             
             <!-- 备注信息 -->
-            <div v-if="category.remark" class="detail-item">
+            <div v-if="category.remark" class="detail-item detail-remark">
               <el-icon class="detail-icon">
                 <Document />
               </el-icon>
               <span class="detail-label">备注:</span>
-              <span class="detail-value">{{ category.remark }}</span>
+              <span class="detail-value remark-content">{{ category.remark }}</span>
             </div>
           </div>
         </div>
@@ -334,7 +328,22 @@
 <script lang="ts">
 import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Picture, Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus } from '@element-plus/icons-vue';
+import { 
+  Picture, 
+  Grid, 
+  Calendar, 
+  Document, 
+  Edit, 
+  Delete, 
+  Search, 
+  Refresh, 
+  Plus,
+  CollectionTag,
+  Tickets,
+  Finished,
+  Money,
+  Clock
+} from '@element-plus/icons-vue';
 import { classManagementList, type CategoryItem, type PaginationResult } from '@/api/classManagementApi';
 // @ts-ignore
 import TaskManagement from '@/views/task/index.vue';
@@ -420,9 +429,6 @@ export default {
       className: [
         { required: true, message: '请输入种类名称', trigger: 'blur' }
       ],
-      // classType: [
-      //   { required: true, message: '请输入种类类型', trigger: 'blur' }
-      // ],
       createTime: [
         { required: true, message: '请选择创建时间', trigger: 'change' }
       ],
@@ -837,6 +843,15 @@ export default {
       Edit,
       Delete,
       Plus,
+      Grid,
+      Picture,
+      Calendar,
+      Document,
+      CollectionTag,
+      Tickets,
+      Finished,
+      Money,
+      Clock,
     };
   },
 };
@@ -1064,6 +1079,8 @@ h2 {
   overflow: hidden;
   transition: all 0.3s ease;
   border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
 }
 
 .category-card:hover {
@@ -1071,10 +1088,21 @@ h2 {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
+/* 种类名称标题区域（图片上方） */
+.category-name-header {
+  padding: 16px 20px 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.category-name-value {
+  font-weight: bold !important;
+  font-size: 16px;
+}
+
 /* 卡片图片区域 */
 .card-image {
   width: 100%;
-  height: 200px;
+  height: 220px;
   position: relative;
   overflow: hidden;
 }
@@ -1085,26 +1113,10 @@ h2 {
   object-fit: cover;
 }
 
-/* 无图片时的占位样式 */
-.no-image {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #f5f7fa;
-  color: #c0c4cc;
-}
-
-.no-image span {
-  margin-top: 8px;
-  font-size: 14px;
-}
-
 /* 卡片内容区域 */
 .card-content {
   padding: 20px;
+  flex: 1;
 }
 
 /* 卡片标题 */
@@ -1155,12 +1167,25 @@ h2 {
   word-break: break-all;
 }
 
+/* 备注区域：固定高度，超出内容可滚动，避免撑高卡片 */
+.detail-remark {
+  align-items: flex-start;
+}
+
+.remark-content {
+  max-height: 60px; /* 可根据需要调整显示的高度 */
+  overflow-y: auto;
+  display: block;
+  line-height: 1.6;
+}
+
 /* 卡片操作按钮区域 */
 .card-actions {
   padding: 0 20px 20px 20px;
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  margin-top: auto; /* 将按钮区域固定在卡片底部 */
 }
 
 .card-actions .el-button {

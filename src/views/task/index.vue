@@ -20,8 +20,8 @@
       <el-table v-loading="loading" :data="jobList">
         <el-table-column label="任务名称" align="center" prop="taskName" />
         <el-table-column label="任务人" align="center" prop="taskRen" />
-        <el-table-column label="预计开始周" align="center" prop="yjkaishiTime" />
-        <el-table-column label="预计完成周" align="center" prop="yjwanchengTime" />
+        <el-table-column label="预计开始时间" align="center" prop="yjkaishiTime" />
+        <el-table-column label="预计完成时间" align="center" prop="yjwanchengTime" />
         <el-table-column label="操作" align="center">
           <template #default="{ row }">
             <el-button link type="primary" :icon="Edit" @click="handleUpdate(row)">修改</el-button>
@@ -60,20 +60,20 @@
         <el-form-item label="预计开始时间" prop="yjkaishiTime">
           <el-date-picker
             v-model="form.yjkaishiTime"
-            type="datetime"
+            type="date"
             placeholder="请选择预计开始时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
             style="width: 100%"
           />
         </el-form-item>
         <el-form-item label="预计完成时间" prop="yjwanchengTime">
           <el-date-picker
             v-model="form.yjwanchengTime"
-            type="datetime"
+            type="date"
             placeholder="请选择预计完成时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            format="YYYY-MM-DD HH:mm:ss"
+            value-format="YYYY-MM-DD"
+            format="YYYY-MM-DD"
             style="width: 100%"
           />
         </el-form-item>
@@ -126,7 +126,7 @@ import { Search, Refresh, Plus, Edit, Delete, Grid } from '@element-plus/icons-v
    
     const queryParams = reactive({
       current: 1,                      
-      size: 5,                       
+      size: 10,                       
       taskName: '',                   
       classId: classId.value           // 种类ID（关键字段，用于API过滤）
     })
