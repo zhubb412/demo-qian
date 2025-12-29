@@ -38,6 +38,17 @@
           :key="category.farmplotId" 
           class="category-card"
         >
+          <!-- 地块名称，显示在图片上方 -->
+          <div class="category-name-header">
+            <div class="detail-item">
+              <el-icon class="detail-icon">
+                <MapLocation />
+              </el-icon>
+              <span class="detail-label">地块名称:</span>
+              <span class="detail-value category-name-value">{{ category.farmplotName }}</span>
+            </div>
+          </div>
+          
           <!-- 地块图片显示区域 -->
           <div class="card-image">
             <!-- 有图片时显示图片 -->
@@ -60,15 +71,6 @@
           <div class="card-content">
             <!-- 详细信息 -->
             <div class="card-details">
-  
-              <!-- 地块名称 -->
-              <div class="detail-item">
-                <el-icon class="detail-icon">
-                  <MapLocation />
-                </el-icon>
-                <span class="detail-label">地块名称:</span>
-                <span class="detail-value">{{ category.farmplotName }}</span>
-              </div>
 
               <!-- 轮作计划 -->
               <div v-if="getRotationPlanName(category.rotationId)" class="detail-item">
@@ -320,7 +322,7 @@
           <el-form-item label="地块价格" prop="farmplotJiage">
             <el-input 
               v-model="formData.farmplotJiage" 
-              placeholder="请输入地块价格"
+              placeholder="请输入地块价格(元/亩)"
               clearable
             />
           </el-form-item>
@@ -1385,11 +1387,30 @@
     overflow: hidden;
     transition: all 0.3s ease;
     border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
   }
   
   .category-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* 地块名称标题区域（图片上方） */
+  .category-name-header {
+    padding: 16px 20px 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+  
+  .category-name-header .detail-label {
+    font-weight: bold !important;
+    color: #303133;
+  }
+  
+  .category-name-value {
+    font-weight: bold !important;
+    font-size: 16px;
+    color: #303133;
   }
   
   /* 卡片图片区域 */
@@ -1426,6 +1447,7 @@
   /* 卡片内容区域 */
   .card-content {
     padding: 20px;
+    flex: 1;
   }
   
   /* 卡片标题 */
@@ -1482,6 +1504,7 @@
     display: flex;
     gap: 12px;
     justify-content: flex-end;
+    margin-top: auto; /* 将按钮区域固定在卡片底部 */
   }
   
   .card-actions .el-button {

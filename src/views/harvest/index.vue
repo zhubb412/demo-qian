@@ -57,7 +57,7 @@
       <!-- 收获记录卡片列表 -->
         <div class="batch-card-grid" v-if="harvestList.length > 0">
           <el-row :gutter="24">
-          <el-col :span="8" v-for="item in harvestList" :key="item.farmplotId">
+          <el-col :span="7" v-for="item in harvestList" :key="item.farmplotId">
               <el-card class="batch-card" shadow="hover">
                 <div class="batch-card-header">
                   <div class="header-content">
@@ -94,22 +94,27 @@
                 <div class="batch-card-content">
                   <div class="batch-info">
                     <div class="info-item">
-                      <el-icon><Menu /></el-icon>
+                      <el-icon><Crop /></el-icon>
                     <span class="label">种植作物：</span>
                     <span>{{ item.className || '--' }}</span>
                     </div>
                     <div class="info-item">
-                      <el-icon><Menu /></el-icon>
+                      <el-icon><User /></el-icon>
                     <span class="label">负责人：</span>
                     <span>{{ item.farmplotFzr || '--' }}</span>
                     </div>
                     <div class="info-item">
-                      <el-icon><Menu /></el-icon>
+                      <el-icon><Grid /></el-icon>
                     <span class="label">种植面积：</span>
                     <span>{{ item.farmplotArea ? item.farmplotArea + '亩' : '--' }}</span>
                     </div>
                     <div class="info-item">
-                      <el-icon><Menu /></el-icon>
+                      <el-icon><Box /></el-icon>
+                    <span class="label">作物重量：</span>
+                    <span>{{ item.classWeight ? item.classWeight + 'kg' : '--' }}</span>
+                    </div>
+                    <div class="info-item">
+                      <el-icon><Calendar /></el-icon>
                     <span class="label">收获时间：</span>
                     <span>{{ item.shouhuoTime || '--' }}</span>
                     </div>
@@ -230,7 +235,12 @@
       Edit,
       Search,
       Refresh,
-      Delete
+      Delete,
+      Crop,
+      User,
+      Grid,
+      Calendar,
+      Box
     } from '@element-plus/icons-vue'
   import { farmTaskList, type FarmTaskDTOItem } from '@/api/farmTaskApi'
   import { farmPlotList, type FarmPlotItem } from '@/api/farmPlotApi'
@@ -251,6 +261,7 @@
     className: string
     farmplotFzr: string // 负责人
     farmplotArea: number | null // 种植面积
+    classWeight?: string // 作物重量
     shouhuoTime?: string // 收获时间
     classImg?: string[] // 改为数组，支持多张图片轮播
     taskCount: number
@@ -330,6 +341,7 @@
             let isHarvested = false
             let harvestId: number | undefined
             let shouhuoTime: string | undefined
+            let classWeight: string | undefined
             try {
               const harvestRes = await HarvestItemApi.getHarvestItemList({
                 farmId: farmId
@@ -338,6 +350,7 @@
                 isHarvested = true
                 harvestId = harvestRes.records[0].id
                 shouhuoTime = harvestRes.records[0].shouhuoTime
+                classWeight = harvestRes.records[0].classWeight
               }
             } catch (error) {
               // 如果查询失败，默认为未收获
@@ -352,6 +365,7 @@
               className: plot.farmplotZuowu || '', // 直接使用 farmplotZuowu
               farmplotFzr: plot.farmplotFzr || '', // 负责人
               farmplotArea: plot.farmplotArea, // 种植面积
+              classWeight: classWeight, // 作物重量
               shouhuoTime: shouhuoTime, // 收获时间
               classImg: classImg.length > 0 ? classImg : undefined, // 只有有图片时才赋值
               taskCount: tasks.length,
@@ -685,21 +699,20 @@
       }
   
   .batch-card-grid .el-col {
-        padding: 22px 12px 22px 12px;
+        padding: 12px;
     }
   
     .batch-card {
-      height: 100%;
       background: white;
       border-radius: 16px;
-      padding: 16px;
+      padding: 12px;
       transition: all 0.3s ease;
       border: 1px solid rgba(0, 0, 0, 0.05);
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   }
   
   .batch-card .batch-card-header {
-        margin-bottom: 16px;
+        margin-bottom: 10px;
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
@@ -728,7 +741,7 @@
         border-radius: 8px;
         overflow: hidden;
         cursor: pointer;
-        margin-bottom: 16px;
+        margin-bottom: 10px;
   }
   
   .batch-card .batch-image img {
@@ -749,7 +762,7 @@
   .batch-card .batch-card-content .batch-info {
           display: grid;
           grid-template-columns: 1fr;
-          gap: 12px;
+          gap: 8px;
   }
   
   .batch-card .batch-card-content .batch-info .info-item {
@@ -773,9 +786,11 @@
           display: flex;
           justify-content: flex-end;
           gap: 8px;
-          margin-top: 16px;
-          padding-top: 16px;
+          margin-top: 10px;
+          padding-top: 10px;
           border-top: 1px solid #f0f0f0;
+          margin-bottom: 0;
+          padding-bottom: 0;
       }
   
   .batch-card:hover {

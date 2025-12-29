@@ -49,6 +49,17 @@
         :key="material.materialId" 
         class="category-card"
       >
+        <!-- 农资名称，显示在图片上方 -->
+        <div class="category-name-header">
+          <div class="detail-item">
+            <el-icon class="detail-icon">
+              <CollectionTag />
+            </el-icon>
+            <span class="detail-label">农资名称:</span>
+            <span class="detail-value category-name-value">{{ material.materialName }}</span>
+          </div>
+        </div>
+        
         <!-- 农资图片区域 -->
         <div class="card-image">
           <el-image 
@@ -78,15 +89,6 @@
               </el-icon>
               <span class="detail-label">农资编码:</span>
               <span class="detail-value">{{ material.materialCode }}</span>
-            </div>
-            
-            <!-- 农资名称 -->
-            <div class="detail-item">
-              <el-icon class="detail-icon">
-                <Grid />
-              </el-icon>
-              <span class="detail-label">农资名称:</span>
-              <span class="detail-value">{{ material.materialName }}</span>
             </div>
             
             <!-- 计量单位 -->
@@ -261,7 +263,7 @@
 <script lang="ts">
 import { ref } from 'vue';
 import { ElMessage } from 'element-plus';
-import { Picture, Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus } from '@element-plus/icons-vue';
+import { Picture, Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus, CollectionTag } from '@element-plus/icons-vue';
 import { agricultureMaterialList, type AgricultureMaterialItem, type PaginationResult } from '@/api/agricultureMaterialApi';
 
 // 使用API中定义的接口类型
@@ -690,6 +692,11 @@ export default {
       Edit,
       Delete,
       Plus,
+      Grid,
+      Picture,
+      Calendar,
+      Document,
+      CollectionTag,
     };
   },
 };
@@ -839,6 +846,8 @@ h2 {
   overflow: hidden;
   transition: all 0.3s ease;
   border: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column;
 }
 
 .category-card:hover {
@@ -846,10 +855,27 @@ h2 {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
+/* 农资名称标题区域（图片上方） */
+.category-name-header {
+  padding: 16px 20px 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.category-name-header .detail-label {
+  font-weight: bold !important;
+  color: #303133;
+}
+
+.category-name-value {
+  font-weight: bold !important;
+  font-size: 16px;
+  color: #303133;
+}
+
 /* 卡片图片区域 */
 .card-image {
   width: 100%;
-  height: 200px;
+  height: 220px;
   position: relative;
   overflow: hidden;
 }
@@ -880,6 +906,7 @@ h2 {
 /* 卡片内容区域 */
 .card-content {
   padding: 20px;
+  flex: 1;
 }
 
 /* 卡片标题 */
@@ -936,6 +963,7 @@ h2 {
   display: flex;
   gap: 12px;
   justify-content: flex-end;
+  margin-top: auto; /* 将按钮区域固定在卡片底部 */
 }
 
 .card-actions .el-button {

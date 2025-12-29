@@ -33,7 +33,7 @@
                     <div class="task-content">
                         <div class="task-main">
                             <div class="task-name">
-                                {{ task.farmtaskName }}
+                               任务名称：{{ task.farmtaskName }}
                             </div>
                             <div class="task-info">
                                 <span class="info-item">
@@ -399,6 +399,7 @@ const onTaskUpdated = (updatedData?: any) => {
     padding: 5px 10px;
     height: 28px;
     font-size: 12px;
+    margin-top: 22px;
 }
 
 /* StatusSelect 组件在列表中的样式 */
@@ -416,11 +417,14 @@ const onTaskUpdated = (updatedData?: any) => {
     width: auto;
     height: auto;
     min-width: 60px;
+    justify-content: flex-start !important;
 }
 
 .gantt-container .table .task-list .task-card .task-content .task-actions .action-buttons .status-display :deep(.radioSelect .title div:first-of-type) {
     font-size: 12px;
     line-height: 1.2;
+    padding-top: 32px !important;
+    margin-top: 0 !important;
 }
 
 .gantt-container .table .task-list .task-card .task-content .task-actions .action-buttons .status-display :deep(.radioSelect .title div:last-of-type) {

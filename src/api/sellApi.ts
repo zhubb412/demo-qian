@@ -5,8 +5,8 @@ export interface SellItem {
     id: number;
     sellId: number;
     sellName: string;
-    sellJiage: string;
-    sellAge: string;
+    sellJiage: number; // 后端为 double 类型
+    sellAge: number; // 后端为 double 类型
     sellRen: string;
     sellRenId: number;
     sellStatus: string;

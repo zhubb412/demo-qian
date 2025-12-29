@@ -71,9 +71,7 @@
           <el-input
             v-model="form.sellJiage"
             placeholder="请输入售卖价格"
-            type="number"
-            :min="0"
-            :precision="2"
+            @input="handlePriceInput"
           >
             <template #append>元/斤</template>
           </el-input>
@@ -82,9 +80,6 @@
           <el-input
             v-model="form.sellAge"
             placeholder="由系统根据售卖价格自动计算"
-            type="number"
-            :min="0"
-            :precision="2"
             disabled
           >
             <template #append>元</template>
@@ -144,6 +139,7 @@ const total = ref(0)
 const title = ref('')
 const queryRef = ref()
 const formRef = ref<FormInstance>()
+const lastValidPrice = ref('') // 存储上一次有效的价格值
 
 const queryParams = reactive({
   current: 1,
@@ -165,7 +161,14 @@ const form = reactive({
 
 const rules = reactive({
   sellName: [{ required: true, message: '售卖作物名称不能为空', trigger: 'blur' }],
-  sellJiage: [{ required: true, message: '售卖价格不能为空', trigger: 'blur' }],
+  sellJiage: [
+    { required: true, message: '售卖价格不能为空', trigger: 'blur' },
+    { 
+      pattern: /^\d+(\.\d{1,2})?$/, 
+      message: '请输入有效的价格（最多两位小数）', 
+      trigger: 'blur' 
+    }
+  ],
   sellAge: [{ required: true, message: '售卖总额不能为空', trigger: 'blur' }],
   sellRen: [{ required: true, message: '售卖人不能为空', trigger: 'blur' }],
   sellTime: [{ required: true, message: '售卖时间不能为空', trigger: 'change' }]
@@ -265,6 +268,24 @@ const getUserList = async () => {
 }
 
 /**
+ * 处理价格输入，只允许数字和小数点
+ */
+const handlePriceInput = (value: string) => {
+  // 只允许数字和小数点，最多两位小数
+  const regex = /^\d*\.?\d{0,2}$/
+  if (regex.test(value)) {
+    // 如果符合格式，更新值和上次有效值
+    form.sellJiage = value
+    lastValidPrice.value = value
+    // 触发计算
+    calculateSellAge()
+  } else {
+    // 如果不符合格式，恢复为上次的有效值
+    form.sellJiage = lastValidPrice.value
+  }
+}
+
+/**
  * 计算售卖总额
  * 售卖总额 = 售卖价格 × 作物斤数
  */
@@ -345,6 +366,7 @@ const handleAdd = async () => {
     sellStatus: '0', // 默认未售卖
     sellTime: ''
   })
+  lastValidPrice.value = '' // 重置上次有效价格
   open.value = true
   title.value = '新增售卖记录'
 }
@@ -371,13 +393,14 @@ const handleUpdate = async (row: SellItem) => {
     id: row.id,
     sellId: row.sellId,
     sellName: row.sellName,
-    sellJiage: row.sellJiage,
-    sellAge: row.sellAge,
+    sellJiage: row.sellJiage?.toString() || '', // 转换为字符串（后端返回的是 number）
+    sellAge: row.sellAge?.toString() || '', // 转换为字符串（后端返回的是 number）
     sellRen: row.sellRen,
     sellRenId: row.sellRenId,
     sellStatus: row.sellStatus || '0',
     sellTime: row.sellTime
   })
+  lastValidPrice.value = row.sellJiage?.toString() || '' // 设置上次有效价格为当前值
   open.value = true
   title.value = '修改售卖记录'
 }
@@ -420,11 +443,11 @@ const submitForm = async () => {
           calculateSellAge()
         }
         
-        // 构建提交数据
+        // 构建提交数据，确保价格和总额转换为数字类型（后端是 double 类型）
         const submitData: any = {
           sellName: form.sellName,
-          sellJiage: form.sellJiage,
-          sellAge: form.sellAge, // 计算后的售卖总额
+          sellJiage: parseFloat(form.sellJiage) || 0, // 转换为数字类型
+          sellAge: parseFloat(form.sellAge) || 0, // 转换为数字类型
           sellRen: form.sellRen,
           sellTime: form.sellTime,
           sellId: form.sellId, // 始终包含 sellId（来自选中的收获记录 id）
@@ -491,13 +514,7 @@ const handleCurrentChange = (page: number) => {
   getList()
 }
 
-// 监听售卖价格变化，实时计算售卖总额
-watch(
-  () => form.sellJiage,
-  () => {
-    calculateSellAge()
-  }
-)
+// 注意：价格输入已通过 handlePriceInput 处理，这里不再需要 watch
 
 // 组件挂载时获取列表数据
 onMounted(() => {

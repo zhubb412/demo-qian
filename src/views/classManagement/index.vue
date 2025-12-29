@@ -1094,9 +1094,15 @@ h2 {
   border-bottom: 1px solid #f0f0f0;
 }
 
+.category-name-header .detail-label {
+  font-weight: bold !important;
+  color: #303133;
+}
+
 .category-name-value {
   font-weight: bold !important;
   font-size: 16px;
+  color: #303133;
 }
 
 /* 卡片图片区域 */

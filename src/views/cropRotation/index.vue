@@ -39,6 +39,17 @@
           :key="category.id" 
           class="category-card"
         >
+          <!-- 轮作计划名称，显示在图片上方 -->
+          <div class="category-name-header">
+            <div class="detail-item">
+              <el-icon class="detail-icon">
+                <CollectionTag />
+              </el-icon>
+              <span class="detail-label">轮作计划名称:</span>
+              <span class="detail-value category-name-value">{{ category.rotationName }}</span>
+            </div>
+          </div>
+          
           <!-- 轮作计划图片轮播区域 -->
           <div class="card-image">
             <!-- 有图片时显示轮播 -->
@@ -77,26 +88,13 @@
           <div class="card-content">
             <!-- 详细信息 -->
             <div class="card-details">
-  
-              <!-- 作物轮作计划名称 -->
-              <div class="detail-item">
-                <el-icon class="detail-icon">
-                  <Grid />
-                </el-icon>
-                <span class="detail-label">轮作计划名称:</span>
-                <span class="detail-value">{{ category.rotationName }}</span>
-              </div>
-
-              
-
-              
               <!-- 作物轮作计划好处 -->
-              <div class="detail-item">
+              <div class="detail-item detail-benefit">
                 <el-icon class="detail-icon">
-                  <Grid />
+                  <Tickets />
                 </el-icon>
                 <span class="detail-label">轮作计划好处:</span>
-                <span class="detail-value">{{ category.rotationBenefit }}</span>
+                <span class="detail-value benefit-content">{{ category.rotationBenefit }}</span>
               </div>
               
               <!-- 作物轮作周期 -->
@@ -307,7 +305,7 @@
   <script lang="ts">
   import { ref } from 'vue';
   import { ElMessage } from 'element-plus';
-  import { Picture, Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus } from '@element-plus/icons-vue';
+  import { Picture, Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus, CollectionTag, Tickets } from '@element-plus/icons-vue';
   import { cropRotationList, type CropRotationItem, type PaginationResult } from '@/api/cropRotationApi';
   import type { CategoryItem } from '@/api/classManagementApi';
   
@@ -498,8 +496,6 @@
         if (selectedCrop) {
           // 自动填充适配作物
           formData.value.adaptedCrop = selectedCrop.classAdapt || '';
-          // 自动填充好处（使用remark字段）
-          formData.value.rotationBenefit = selectedCrop.remark || '';
           
           // 填充数据库字段
           formData.value.rotationClassname = selectedCrop.className;
@@ -508,9 +504,10 @@
           // 设置rotationId1为选中作物的classId
           formData.value.rotationId1 = selectedCrop.classId;
           
-          // 根据适配作物名称查找对应的classId
+          // 根据适配作物名称查找对应的classId和备注
+          let adaptedCrop = null;
           if (selectedCrop.classAdapt) {
-            const adaptedCrop = cropList.value.find(crop => 
+            adaptedCrop = cropList.value.find(crop => 
               crop.className === selectedCrop.classAdapt
             );
             if (adaptedCrop) {
@@ -521,6 +518,16 @@
           } else {
             formData.value.rotationId2 = 0;
           }
+          
+          // 自动填充好处：拼接选中作物和适配作物的备注
+          const benefits: string[] = [];
+          if (selectedCrop.remark) {
+            benefits.push(selectedCrop.remark);
+          }
+          if (adaptedCrop && adaptedCrop.remark) {
+            benefits.push(adaptedCrop.remark);
+          }
+          formData.value.rotationBenefit = benefits.join(' ');
           
           // 自动填充图片
           updateRotationImages(selectedCrop);
@@ -850,6 +857,12 @@
         Edit,
         Delete,
         Plus,
+        Grid,
+        Picture,
+        Calendar,
+        Document,
+        CollectionTag,
+        Tickets,
       };
     },
   };
@@ -1087,17 +1100,36 @@
     overflow: hidden;
     transition: all 0.3s ease;
     border: 1px solid #f0f0f0;
+    display: flex;
+    flex-direction: column;
   }
   
   .category-card:hover {
     transform: translateY(-4px);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   }
+
+  /* 轮作计划名称标题区域（图片上方） */
+  .category-name-header {
+    padding: 16px 20px 12px 20px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .category-name-header .detail-label {
+    font-weight: bold !important;
+    color: #303133;
+  }
+
+  .category-name-value {
+    font-weight: bold !important;
+    font-size: 16px;
+    color: #303133;
+  }
   
   /* 卡片图片区域 */
   .card-image {
     width: 100%;
-    height: 200px;
+    height: 220px;
     position: relative;
     overflow: hidden;
   }
@@ -1128,6 +1160,7 @@
   /* 卡片内容区域 */
   .card-content {
     padding: 20px;
+    flex: 1;
   }
   
   /* 卡片标题 */
@@ -1177,6 +1210,18 @@
     flex: 1;
     word-break: break-all;
   }
+
+  /* 轮作计划好处区域：固定高度，超出内容可滚动，避免撑高卡片 */
+  .detail-benefit {
+    align-items: flex-start;
+  }
+
+  .benefit-content {
+    max-height: 60px; /* 可根据需要调整显示的高度 */
+    overflow-y: auto;
+    display: block;
+    line-height: 1.6;
+  }
   
   /* 卡片操作按钮区域 */
   .card-actions {
@@ -1184,6 +1229,7 @@
     display: flex;
     gap: 12px;
     justify-content: flex-end;
+    margin-top: auto; /* 将按钮区域固定在卡片底部 */
   }
   
   .card-actions .el-button {
