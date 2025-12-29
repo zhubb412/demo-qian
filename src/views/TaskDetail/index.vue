@@ -20,6 +20,14 @@
                         </radio-select>
                     </el-form-item>
                 </el-col>
+
+                <el-col :span="4" class="flex items-center">
+                    <calendar-select v-model="form.planStart" :showTime="true" disabled>计划开始时间</calendar-select>
+                </el-col>
+                <el-col :span="4" class="flex items-center">
+                    <calendar-select v-model="form.planFinish" :showTime="true" disabled>计划完成时间</calendar-select>
+                </el-col>
+
                 <el-col :span="4" class="flex items-center">
                     <calendar-select v-model="form.actualStart" :showTime="false" @change="handleDateChange">任务开始时间</calendar-select>
                 </el-col>
@@ -51,7 +59,7 @@
                                 </div>
                         </div>
                         
-                        <div class="mt-8">
+                        <!-- <div class="mt-8">
                             <div style="display: flex; align-items: center; margin-bottom: 1rem;">
                                 <span class="font-bold text-lg mr-2" style="color: black;">操作信息</span>
                                 <div style="flex-grow: 1; height: 1px; background-color: #d1d5db;"></div>
@@ -62,7 +70,7 @@
                                     由<span class="text-warning font-bold px-2">{{ log.operName }}</span><span>{{log.operDes}}</span>
                                 </div>
                             </div>
-                        </div>
+                        </div> -->
 
                     
                     </el-tab-pane>
@@ -165,14 +173,14 @@ const rules = {
 
 // 当前用户信息（用于子组件）
 const currentUser = {
-  userId: null,
+  userId: 0,
   userName: ''
 }
 
 // 获取用户列表（责任人列表）
 const fetchUserList = async () => {
     try {
-        const res = await sysUserList.listSysUser()
+        const res = await sysUserList.listSysUser({}) // 接口需要参数对象，这里传空
         
         // 提取数据 - 支持 records/data/数组 格式
         const rawData = (res as any)?.records || (res as any)?.data || res || []
@@ -220,6 +228,8 @@ const fetchTaskDetail = async () => {
             taskRen: taskData.taskRen,
             farmId: taskData.farmId,
             farmtaskName: taskData.farmtaskName || '',
+            planStart: taskData.planStart || null,
+            planFinish: taskData.planFinish || null,
             responsiblePersonName: taskData.responsiblePersonName,
             // 处理状态：接口返回 "0" 或 "1"，确保是字符串类型
             status: taskData.status !== undefined && taskData.status !== null ? String(taskData.status) : "0",
@@ -302,8 +312,16 @@ const saveTask = async () => {
             form.responsiblePersonName = responsiblePersonName
             form.status = status
             
-            // 触发更新事件，通知父组件
-            emit('updated')
+            // 触发更新事件，通知父组件，并携带最新字段，便于外层同步展示
+            emit('updated', {
+                taskId: form.taskId,
+                status,
+                responsiblePersonName,
+                actualStart: submitData.actualStart,
+                actualFinish: submitData.actualFinish,
+                planStart: submitData.planStart,
+                planFinish: submitData.planFinish
+            })
         } else {
             ElMessage.error((res as any)?.msg || '保存失败')
         }

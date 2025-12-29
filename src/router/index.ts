@@ -8,7 +8,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/', // 路由路径：根路径
     redirect: '/login' // 重定向目标：登录页
   },
-  // 登录页路由：不需要token验证
   {
     path: '/login', // 路由路径：登录页
     name: 'Login', // 路由名称：用于编程式导航
@@ -96,6 +95,12 @@ const routes: Array<RouteRecordRaw> = [
         path: 'bill', // 子路由路径
         name: 'Bill', // 路由名称
         component: () => import('@/views/Bill/index.vue') // 懒加载账单管理组件
+      },
+      // 位置管理页面
+      {
+        path: 'location', // 子路由路径
+        name: 'Location', // 路由名称
+        component: () => import('@/views/location/index.vue') // 懒加载位置管理组件
       }
     ]
   }

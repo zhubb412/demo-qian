@@ -31,6 +31,8 @@ export interface FarmTaskDTOItem {
     farmtaskName: string;
     responsiblePersonName: string;
     status: string;
+    planStart?: string;
+    planFinish?: string;
     actualStart?: string;
     actualFinish?: string;
 }

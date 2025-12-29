@@ -1,4 +1,5 @@
 <template>
+    <!--    种植任务列表 -->
     <div class="gantt-container">
         <div class="search">
             <el-form :model="queryParams" ref="queryFormRef" :inline="true" v-show="showSearch" label-width="100px">
@@ -35,17 +36,21 @@
                                 {{ task.farmtaskName }}
                             </div>
                             <div class="task-info">
-                                <span class="info-item" v-if="task.responsiblePersonName">
-                                    负责人：{{ task.responsiblePersonName }}
+                                <span class="info-item">
+                                    负责人：{{ task.responsiblePersonName  }}
                                 </span>
-                                <span class="info-item" v-if="task.taskRen">
-                                    任务人：{{ task.taskRen }}
+                                
+                                <span class="info-item">
+                                    计划开始时间：{{ formatDate(task.planStart)  }}
                                 </span>
-                                <span class="info-item" v-if="task.actualStart">
+                                <span class="info-item">
+                                    计划完成时间：{{ formatDate(task.planFinish) }}
+                                </span>
+                                <span class="info-item">
                                     任务开始时间：{{ formatDate(task.actualStart) }}
                                 </span>
-                                <span class="info-item" v-if="task.actualFinish">
-                                    任务结束时间：{{ formatDate(task.actualFinish) }}
+                                <span class="info-item">
+                                    任务结束时间：{{ formatDate(task.actualFinish)  }}
                                 </span>
                             </div>
                         </div>
@@ -275,7 +280,14 @@ const onTaskUpdated = (updatedData?: any) => {
             if (updatedData.responsiblePersonName !== undefined) {
                 taskList.value[taskIndex].responsiblePersonName = updatedData.responsiblePersonName
             }
-            // 更新日期
+            // 更新计划日期
+            if (updatedData.planStart !== undefined) {
+                taskList.value[taskIndex].planStart = updatedData.planStart
+            }
+            if (updatedData.planFinish !== undefined) {
+                taskList.value[taskIndex].planFinish = updatedData.planFinish
+            }
+            // 更新实际日期
             if (updatedData.actualStart !== undefined) {
                 taskList.value[taskIndex].actualStart = updatedData.actualStart
             }

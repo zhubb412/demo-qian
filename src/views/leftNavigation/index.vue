@@ -4,7 +4,7 @@
     <!-- 侧边栏：左侧导航菜单 -->
     <el-aside width="200px" class="aside">
       <!-- 系统 Logo 显示区域 -->
-      <div class="logo">演示系统</div>
+      <div class="logo">农场地块信息与作物轮作管理系统</div>
       <!-- 菜单：支持展开/收起与选中高亮 -->
       <!-- default-active 绑定当前激活菜单；@select 响应菜单点击；collapse 控制折叠 -->
       <el-menu
@@ -63,6 +63,11 @@
           <el-icon><Document /></el-icon>
           <span>历史种植</span>
         </el-menu-item>
+        <!-- 位置管理 -->
+        <!-- <el-menu-item index="location">
+          <el-icon><MapLocation /></el-icon>
+          <span>位置管理</span>
+        </el-menu-item> -->
         <!-- 系统设置折叠菜单 -->
         <el-sub-menu index="settings">
           <template #title>
@@ -195,7 +200,8 @@ watch(() => route.path, (newPath) => {
     '/main/history': 'history',
     '/main/bill': 'bill',
     '/main/settings': 'settings-overview',
-    '/main/settings/employee': 'settings-employee'
+    '/main/settings/employee': 'settings-employee',
+    '/main/location': 'location'
   }
   const menuKey = pathToMenuMap[newPath] // 路由路径映射菜单
   if (menuKey) {
@@ -218,7 +224,8 @@ function onSelectMenu(index: string) {
     'history': '/main/history',
     'bill': '/main/bill',
     'settings-overview': '/main/settings',
-    'settings-employee': '/main/settings/employee'
+    'settings-employee': '/main/settings/employee',
+    'location': '/main/location'
   }
   const targetRoute = routeMap[index] // 找到对应路由
   if (targetRoute) {

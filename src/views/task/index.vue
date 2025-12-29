@@ -57,11 +57,25 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="预计开始周" prop="yjkaishiTime">
-          <el-input v-model="form.yjkaishiTime" placeholder="请输入预计开始周" />
+        <el-form-item label="预计开始时间" prop="yjkaishiTime">
+          <el-date-picker
+            v-model="form.yjkaishiTime"
+            type="datetime"
+            placeholder="请选择预计开始时间"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
         </el-form-item>
-        <el-form-item label="预计完成周" prop="yjwanchengTime">
-          <el-input v-model="form.yjwanchengTime" placeholder="请输入预计完成周" />
+        <el-form-item label="预计完成时间" prop="yjwanchengTime">
+          <el-date-picker
+            v-model="form.yjwanchengTime"
+            type="datetime"
+            placeholder="请选择预计完成时间"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            format="YYYY-MM-DD HH:mm:ss"
+            style="width: 100%"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -104,8 +118,8 @@ import { Search, Refresh, Plus, Edit, Delete, Grid } from '@element-plus/icons-v
     const form = reactive({
       taskName: '',                    
       taskRen: '',                    
-      yjkaishiTime: '',                
-      yjwanchengTime: '',              
+      yjkaishiTime: '',                // 使用日期时间选择器，提交格式YYYY-MM-DD HH:mm:ss
+      yjwanchengTime: '',              // 使用日期时间选择器，提交格式YYYY-MM-DD HH:mm:ss
       classId: classId.value          // 种类ID（关键字段，用于关联）
     } as any)
     
@@ -130,7 +144,7 @@ import { Search, Refresh, Plus, Edit, Delete, Grid } from '@element-plus/icons-v
      */
     const getUserList = async () => {
       try {
-        const res = await sysUserList.listSysUser()
+        const res = await sysUserList.listSysUser({}) // 后端接口需要参数对象，这里默认传空条件
         userList.value = res.records || []
       } catch (error) {
         console.error('获取用户列表失败:', error)

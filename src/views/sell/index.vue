@@ -50,7 +50,7 @@
 
     <!-- 新增/编辑对话框 -->
     <el-dialog :title="title" v-model="open" width="500px" @close="handleDialogClose">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="120px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="140px" label-position="left">
         <el-form-item label="售卖作物名称" prop="sellName">
           <el-select
             v-model="form.sellName"
@@ -508,6 +508,13 @@ onMounted(() => {
 <style scoped>
 :deep(.el-form-item__label) {
   font-weight: 500;
+  white-space: nowrap;
+  text-align: left;
+  padding-right: 12px;
+}
+
+:deep(.el-dialog .el-form-item) {
+  margin-bottom: 22px;
 }
 </style>
 

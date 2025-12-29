@@ -17,22 +17,26 @@
         >注册</button>
       </div>
       <!-- 主体表单：根据 activeTab 切换校验与展示 -->
-      <form class="auth-form" @submit.prevent="onSubmit">
+      <el-form
+        ref="formRef"
+        class="auth-form"
+        :model="currentForm"
+        :rules="dataRule"
+        label-position="top"
+        @submit.prevent="onSubmit"
+      >
         <!-- 用户名输入框（登录与注册均使用） -->
-        <div class="form-group">
-          <label>用户名</label>
+        <el-form-item prop="username" label="用户名">
           <el-input
             v-model.trim="(currentForm as any).username"
             placeholder="请输入用户名"
             :prefix-icon="User"
             clearable
           />
-          <p v-if="errors.username" class="error-text">{{ errors.username }}</p>
-        </div>
+        </el-form-item>
 
         <!-- 密码输入框（登录/注册共用） -->
-        <div class="form-group">
-          <label>密码</label>
+        <el-form-item prop="password" label="密码">
           <el-input
             v-model.trim="currentForm.password"
             type="password"
@@ -40,12 +44,10 @@
             show-password
             :prefix-icon="Lock"
           />
-          <p v-if="errors.password" class="error-text">{{ errors.password }}</p>
-        </div>
+        </el-form-item>
 
         <!-- 确认密码（仅注册时显示） -->
-        <div class="form-group" v-if="activeTab === 'register'">
-          <label>确认密码</label>
+        <el-form-item v-if="activeTab === 'register'" prop="confirmPassword" label="确认密码">
           <el-input
             v-model.trim="registerForm.confirmPassword"
             type="password"
@@ -53,8 +55,7 @@
             show-password
             :prefix-icon="Lock"
           />
-          <p v-if="errors.confirmPassword" class="error-text">{{ errors.confirmPassword }}</p>
-        </div>
+        </el-form-item>
 
         <!-- 操作按钮：提交 与 重置 -->
         <div class="form-actions">
@@ -71,7 +72,7 @@
             {{ activeTab === 'login' ? '去注册' : '去登录' }}
           </button>
         </p>
-      </form>
+      </el-form>
     </div>
   </div>
   
@@ -80,6 +81,7 @@
 <script setup lang="ts">
 // 引入Vue响应式工具函数
 import { reactive, ref, computed } from 'vue'
+import type { FormInstance, FormRules } from 'element-plus'
 // 引入Vue Router的导航函数
 import { useRouter, useRoute } from 'vue-router'
 // 引入Element Plus图标组件
@@ -121,8 +123,8 @@ const registerForm = reactive<RegisterForm>({
   confirmPassword: '' // 确认密码初始值为空
 })
 
-// 响应式错误信息容器：存储表单验证错误信息
-const errors = reactive<ErrorState>({})
+// 表单引用：用于调用Element Plus校验方法
+const formRef = ref<FormInstance>()
 
 // 计算属性：根据当前Tab返回对应的表单对象
 const currentForm = computed<LoginForm | RegisterForm>(() => {
@@ -130,43 +132,49 @@ const currentForm = computed<LoginForm | RegisterForm>(() => {
   return activeTab.value === 'login' ? loginForm : registerForm
 })
 
-// 工具函数：清空所有错误信息
-function resetErrors() {
-  // 遍历错误对象的所有键，删除每个错误信息
-  Object.keys(errors).forEach((k) => delete (errors as any)[k])
-}
-
-// 表单验证函数：验证表单字段是否合法
-function validate(): boolean {
-  // 先清空之前的错误信息
-  resetErrors()
-  // 判断当前是否为登录模式
-  const isLogin = activeTab.value === 'login'
-  // 获取当前表单对象（转换为注册表单类型以支持所有字段）
-  const form = currentForm.value as RegisterForm
-
-  // 验证用户名：如果为空，添加错误信息
-  if (!form.username) {
-    errors.username = '请输入用户名'
+// 校验规则：使用Element Plus的表单校验写法
+const dataRule = computed<FormRules>(() => {
+  // 登录/注册共享的必填规则（触发时机：blur）
+  const commonRules: FormRules = {
+    username: [{ required: true, message: '帐号不能为空', trigger: 'blur' }],
+    password: [{ required: true, message: '密码不能为空', trigger: 'blur' }]
   }
-  // 验证密码：如果为空，添加错误信息
-  if (!form.password) {
-    errors.password = '请输入密码'
-  } 
-  // 如果是注册模式，需要验证确认密码
-  if (!isLogin) {
-    // 如果确认密码为空，添加错误信息
-    if (!form.confirmPassword) {
-      errors.confirmPassword = '请再次输入密码'
-    } 
-    // 如果确认密码与密码不一致，添加错误信息
-    else if (form.confirmPassword !== form.password) {
-      errors.confirmPassword = '两次输入的密码不一致'
+
+  // 注册模式追加确认密码校验
+  if (activeTab.value === 'register') {
+    return {
+      ...commonRules,
+      confirmPassword: [
+        { required: true, message: '请再次输入密码', trigger: 'blur' },
+        {
+          // 自定义校验：两次输入必须一致
+          validator: (_rule, value, callback) => {
+            if (!value) {
+              callback(new Error('请再次输入密码'))
+            } else if (value !== registerForm.password) {
+              callback(new Error('两次输入的密码不一致'))
+            } else {
+              callback()
+            }
+          },
+          trigger: 'blur'
+        }
+      ]
     }
   }
 
-  // 如果错误对象中没有错误（长度为0），返回true表示验证通过
-  return Object.keys(errors).length === 0
+  return commonRules
+})
+
+// 表单验证函数：调用Element Plus内置校验，保持原有入口不变
+async function validate(): Promise<boolean> {
+  if (!formRef.value) return false
+  try {
+    await formRef.value.validate()
+    return true
+  } catch (_err) {
+    return false
+  }
 }
 
 // 获取路由实例：用于编程式导航
@@ -175,9 +183,10 @@ const router = useRouter()
 const route = useRoute()
 
 // 表单提交函数：处理登录和注册逻辑
-function onSubmit() {
+async function onSubmit() {
   // 先进行表单验证，如果验证失败则直接返回
-  if (!validate()) return
+  const isValid = await validate()
+  if (!isValid) return
   
   // 判断当前是登录还是注册
   if (activeTab.value === 'login') {
@@ -253,8 +262,8 @@ function onSubmit() {
 
 // 重置表单函数：根据当前Tab清空对应的表单数据
 function onReset() {
-  // 先清空所有错误信息
-  resetErrors()
+  // 先清空Element Plus校验提示
+  formRef.value?.clearValidate()
   // 根据当前Tab重置对应的表单
   if (activeTab.value === 'login') {
     // 重置登录表单

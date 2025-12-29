@@ -104,7 +104,7 @@
                 <Grid />
               </el-icon>
               <span class="detail-label">农资价格:</span>
-              <span class="detail-value">{{ material.materialJg}}</span>
+              <span class="detail-value">{{ material.materialJg}}元</span>
             </div>
             
             <!-- 创建时间 -->
@@ -169,20 +169,19 @@
         ref="formRef" 
         label-width="100px"
       >
-        <!-- 农资编码 -->
-        <el-form-item label="农资编码" prop="materialCode">
-          <el-input 
-            v-model="formData.materialCode" 
-            placeholder="请输入农资编码"
-            clearable
-          />
-        </el-form-item>
-        
         <!-- 农资名称 -->
         <el-form-item label="农资名称" prop="materialName">
           <el-input 
             v-model="formData.materialName" 
             placeholder="请输入农资名称"
+            clearable
+          />
+        </el-form-item>
+            <!-- 农资编码 -->
+            <el-form-item label="农资编码" prop="materialCode">
+          <el-input 
+            v-model="formData.materialCode" 
+            placeholder="请输入农资编码"
             clearable
           />
         </el-form-item>
@@ -199,7 +198,7 @@
         <el-form-item label="农资价格" prop="materialJg">
           <el-input 
             v-model="formData.materialJg" 
-            placeholder="请输入农资价格"
+            placeholder="请输入农资价格（元）"
             clearable
           />
         </el-form-item>
@@ -319,9 +318,6 @@ export default {
     
     /** 表单验证规则 */
     const formRules = {
-      materialCode: [
-        { required: true, message: '请输入农资编码', trigger: 'blur' }
-      ],
       materialName: [
         { required: true, message: '请输入农资名称', trigger: 'blur' }
       ],

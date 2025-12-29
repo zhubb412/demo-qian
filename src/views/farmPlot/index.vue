@@ -103,7 +103,7 @@
                   <Crop />
                 </el-icon>
                 <span class="detail-label">作物种植使用量:</span>
-                <span class="detail-value">{{ category.farmplotSyliang }}</span>
+                <span class="detail-value">{{ category.farmplotSyliang }}袋</span>
               </div>
 
               <!-- 地块面积 -->
@@ -124,12 +124,12 @@
               </div>
 
 
-              <!-- 地块位置 -->
+              <!-- 农场位置 -->
               <div class="detail-item">
                 <el-icon class="detail-icon">
                   <MapLocation />
                 </el-icon>
-                <span class="detail-label">地块位置:</span>
+                <span class="detail-label">农场位置:</span>
                 <span class="detail-value">{{ category.farmplotPosition }}</span>
               </div>
   
@@ -248,7 +248,7 @@
           <el-form-item label="作物种植使用量" prop="farmplotSyliang">
             <el-input 
               v-model="formData.farmplotSyliang" 
-              placeholder="请输入作物种植使用量"
+              placeholder="请输入作物种植使用量(袋)"
               clearable
             />
           </el-form-item>
@@ -259,7 +259,31 @@
           </el-form-item>
 
 
-          
+          <!-- 农场位置 -->
+         <!-- 聚焦或点击时打开地图选择弹窗
+              规则：
+              1. 第一次创建农场（没有任何地块时）：需要用户选择农场位置 → 显示输入框
+              2. 农场已有地块时：新增地块默认沿用已有农场位置 → 隐藏输入框，避免重复选择
+              3. 编辑地块时：总是显示农场位置，方便修改 -->
+         <el-form-item
+           v-if="isEditMode || categories.length === 0"
+           label="农场位置"
+           prop="farmplotPosition"
+         >
+            <el-input 
+              v-model="formData.farmplotPosition" 
+              placeholder="请输入农场位置或点击选择"
+              clearable
+              readonly
+              
+              @focus="openLocationDialog"
+              @click="openLocationDialog"
+            >
+              <template #suffix>
+                <el-icon><MapLocation /></el-icon>
+              </template>
+            </el-input>
+          </el-form-item>
           
           <!-- 农场总面积 -->
           <el-form-item v-if="showFarmTotalArea" label="农场总面积" prop="farmplotCount">
@@ -301,14 +325,7 @@
             />
           </el-form-item>
           
-          <!-- 地块位置 -->
-          <el-form-item label="地块位置" prop="farmplotPosition">
-            <el-input 
-              v-model="formData.farmplotPosition" 
-              placeholder="请输入地块位置"
-              clearable
-            />
-          </el-form-item>
+   
           
           <!-- 负责人 -->
           <el-form-item label="负责人" prop="farmplotFzr">
@@ -362,6 +379,17 @@
           </span>
         </template>
       </el-dialog>
+
+      <!-- 地块位置选择弹窗，复用位置管理组件 -->
+      <el-dialog
+        title="选择地块位置"
+        v-model="locationDialogVisible"
+        width="80%"
+        top="5vh"
+        destroy-on-close
+      >
+        <LocationMap @selectionSaved="handleLocationSelection" />
+      </el-dialog>
   
     </div>
   </template>
@@ -372,6 +400,8 @@
   import { Grid, Calendar, Document, Edit, Delete, Search, Refresh, Plus, MapLocation, Picture, Crop } from '@element-plus/icons-vue';
   import { farmPlotList, type FarmPlotItem, type PaginationResult, type FarmPlotDTOItem } from '@/api/farmPlotApi';
   import { sysUserList, type SysUserItem } from '@/api/sysUserApi';
+  // 复用位置管理页面作为弹窗地图
+  import LocationMap from '@/views/location/index.vue';
   // 使用API中定义的接口类型
   type Category = FarmPlotItem;
   
@@ -381,6 +411,9 @@
    */
   export default {
     name: 'CategoryManager',
+    components: {
+      LocationMap
+    },
     setup() {
       // 响应式数据定义
       
@@ -409,6 +442,8 @@
       
       /** 对话框显示状态 */
       const dialogVisible = ref(false);
+      // 是否显示位置选择弹窗
+      const locationDialogVisible = ref(false);
       
       /** 是否为编辑模式 */
       const isEditMode = ref(false);
@@ -496,22 +531,27 @@
         farmplotArea: [
           { required: true, message: '请输入地块面积(亩)', trigger: 'blur' },
           {
-            // 自定义验证器：检查地块面积是否大于农场总面积 value为输入的值 calllback为验证回调函数
+            // 自定义验证器：检查地块面积是否大于农场总面积
+            // value 为当前输入的地块面积，callback 为验证回调函数
             validator: (rule: any, value: any, callback: any) => {
               // 如果地块面积为空，跳过验证
-              if (!value) {
+              if (!value && value !== 0) {
                 callback();
                 return;
               }
-              
-              // 如果农场总面积为空，跳过验证
-              if (!formData.value.farmplotCount) {
+
+              // 将输入值转换为数字，避免字符串比较
+              const plotArea = Number(value);
+              const totalArea = Number(formData.value.farmplotCount);
+
+              // 如果转换失败或农场总面积为空，则跳过验证
+              if (isNaN(plotArea) || !totalArea) {
                 callback();
                 return;
               }
               
               // 比较数值：如果农场总面积小于地块面积，显示错误
-              if (formData.value.farmplotCount < value) {
+              if (totalArea < plotArea) {
                 callback(new Error('您输入的地块面积大于农场总面积'));
               } else {
                 // 验证通过
@@ -521,19 +561,43 @@
             trigger: 'blur' // 在字段失去焦点时触发验证
           },
           {
-            // 自定义验证器：检查地块面积是否大于剩余面积
+            // 自定义验证器：检查地块面积是否大于“当前可用剩余面积”
+            // 注意：这里的“可用剩余面积”是数据库中算出来的剩余面积（第一块地的 farmplotShengarea），
+            // 而不是输入新地块面积后计算出来的剩余值，否则会出现「剩余 440 亩但输入 400 也报错」的问题。
             validator: (rule: any, value: any, callback: any) => {
               // 如果地块面积为空，跳过验证
-              if (!value) {
+              if (!value && value !== 0) {
                 callback();
                 return;
               }
-              
-              // 直接使用formData中的剩余面积进行比较
-              const remainingArea = formData.value.farmplotShengarea;
+
               const newPlotArea = Number(value);
-              
-              if (remainingArea && !isNaN(newPlotArea) && newPlotArea > remainingArea) {
+              if (isNaN(newPlotArea)) {
+                callback(new Error('请输入有效的地块面积数字'));
+                return;
+              }
+
+              // 计算用于比较的“可用剩余面积”
+              let availableRemaining: number | null = null;
+
+              if (!isEditMode.value && categories.value.length > 0) {
+                // 新增模式且已有地块：使用数据库中第一块地的剩余面积作为基数
+                availableRemaining = Number(categories.value[0].farmplotShengarea ?? 0);
+              } else {
+                // 编辑模式或没有现有地块：使用表单中的剩余面积作为基数
+                availableRemaining = formData.value.farmplotShengarea != null
+                  ? Number(formData.value.farmplotShengarea)
+                  : null;
+              }
+
+              // 如果拿不到合法的“可用剩余面积”，则不做校验
+              if (availableRemaining == null || isNaN(availableRemaining)) {
+                callback();
+                return;
+              }
+
+              // 比较：如果新地块面积大于当前可用剩余面积，则提示错误
+              if (newPlotArea > availableRemaining) {
                 callback(new Error('您输入的地块面积大于剩余面积'));
               } else {
                 callback();
@@ -587,22 +651,25 @@
        * 编辑时：用农场总面积减去地块面积
        */
       const shengyuArea = () => {
-        const totalArea = formData.value.farmplotCount;
-        const plotArea = formData.value.farmplotArea;
+        const totalArea = Number(formData.value.farmplotCount);  // 农场总面积
+        const plotArea = Number(formData.value.farmplotArea);    // 当前地块面积
         
+        // 仅在两个值都为有效数字时才计算剩余面积
         if (totalArea && plotArea && !isNaN(totalArea) && !isNaN(plotArea)) {
-          let baseArea;
+          let baseArea: number;
           
           // 如果是新增模式且有现有地块，使用数据库中的剩余面积作为基数
           if (!isEditMode.value && categories.value.length > 0) {
-            baseArea = categories.value[0].farmplotShengarea || 0;
+            baseArea = Number(categories.value[0].farmplotShengarea || 0);
           } else {
             // 如果是编辑模式或没有现有地块，使用农场总面积作为基数
             baseArea = totalArea;
           }
           
+          // 计算最新的剩余面积，并保留两位小数，避免 40.48000000000002 这种浮点误差
           const remaining = baseArea - plotArea;
-          formData.value.farmplotShengarea = Math.max(0, remaining);
+          const fixedRemaining = Number(Math.max(0, remaining).toFixed(2));
+          formData.value.farmplotShengarea = fixedRemaining;
         } else {
           formData.value.farmplotShengarea = null;
         }
@@ -643,7 +710,7 @@
        */
       const fetchUserList = async () => {
         try {
-          const response = await sysUserList.listSysUser();
+          const response = await sysUserList.listSysUser({});
           userList.value = response?.records || [];
         } catch (error) {
           console.error('获取用户列表失败:', error);
@@ -720,9 +787,16 @@
        * 显示新增种类对话框
        */
       const showAddDialog = () => {
+        // 新增模式
         isEditMode.value = false;
+
+        // 如果已经有地块，默认沿用第一块地的“农场位置”
+        // 这样用户在同一个农场下新增地块时就不用每次都重新选择位置
+        const defaultFarmPosition = categories.value.length > 0
+          ? categories.value[0].farmplotPosition || ''
+          : '';
         
-        // 重置表单数据
+        // 重置表单数据（注意农场位置使用 defaultFarmPosition）
         formData.value = {
           farmplotName: '',
           farmplotCount: null,        
@@ -732,7 +806,7 @@
           farmplotZongjia: '',
           farmplotSyliang: '',
           farmplotSyzongjia: '',
-          farmplotPosition: '',
+          farmplotPosition: defaultFarmPosition,
           farmplotFzr: '',
           createTime: '',
           remark: '',
@@ -751,6 +825,28 @@
         setTimeout(initRemainingArea, 0);
       };
   
+      // 打开位置选择弹窗
+      const openLocationDialog = () => {
+        locationDialogVisible.value = true;
+      };
+
+      /**
+       * 地图组件回调：拿到圈选面积后回填农场总面积
+       * area 是圈选的平方米 areaMu 是平方米转换的亩数 polygonPath 圈选区域的多边形路径
+       * 将areaMu赋值给农场总面积，将polygonPath赋值给地块位置
+       */
+      const handleLocationSelection = (payload: { area: number; areaMu: number; polygonPath: string }) => {
+        if (!payload?.areaMu) return;
+        //农场总面积 保留两位小数
+        const areaMu = Number(payload.areaMu.toFixed(2));
+        //农场总面积
+        formData.value.farmplotCount = areaMu;
+        //地块位置
+        formData.value.farmplotPosition = '已通过位置管理圈选';
+        locationDialogVisible.value = false;
+        ElMessage.success(`已填入圈选面积 ${areaMu} 亩`);
+      };
+
       /**
        * 显示编辑种类对话框
        * @param category 要编辑的种类数据
@@ -1001,6 +1097,10 @@
         handlePageChange,
         handleSizeChange,
         shengyuArea,
+        locationDialogVisible,
+        openLocationDialog,
+        handleLocationSelection,
+        LocationMap,
         // 图标组件
         Search,
         Refresh,

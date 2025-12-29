@@ -19,7 +19,7 @@ service.interceptors.request.use(
   (config) => {
     // 从本地存储中获取token
     const token = localStorage.getItem('token')
-    // 如果token存在，将其添加到请求头中
+    // 如果token存在，将其添加到请求头中（这里的token是后端返回的token字符串缓存到localStorage）
     if (token) {
       // 使用Bearer Token格式，这是JWT的标准格式
       config.headers.Authorization = `Bearer ${token}`

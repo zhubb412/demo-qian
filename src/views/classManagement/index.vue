@@ -110,7 +110,7 @@
                 <Grid />
               </el-icon>
               <span class="detail-label">作物价格:</span>
-              <span class="detail-value">{{ category.classJiage }}(元)</span>
+              <span class="detail-value">{{ category.classJiage }}元</span>
             </div>
 
             <div class="detail-item">
@@ -217,7 +217,7 @@
         <el-form-item label="作物价格" prop="classJiage">
           <el-input 
             v-model="formData.classJiage" 
-            placeholder="请输入作物价格"
+            placeholder="请输入作物价格(元)"
             clearable
           />
         </el-form-item>
@@ -235,9 +235,9 @@
         </el-form-item>
 
             <!-- 适配作物 -->
-            <el-form-item label="适配作物" prop="classType">
+            <el-form-item label="适配作物" prop="classAdapt">
           <el-input 
-            v-model="formData.classType" 
+            v-model="formData.classAdapt" 
             placeholder="请输入适配作物"
             clearable
           />
@@ -420,9 +420,9 @@ export default {
       className: [
         { required: true, message: '请输入种类名称', trigger: 'blur' }
       ],
-      classType: [
-        { required: true, message: '请输入种类类型', trigger: 'blur' }
-      ],
+      // classType: [
+      //   { required: true, message: '请输入种类类型', trigger: 'blur' }
+      // ],
       createTime: [
         { required: true, message: '请选择创建时间', trigger: 'change' }
       ],
@@ -433,7 +433,7 @@ export default {
         { required: true, message: '请选择适合收获月份', trigger: 'change' }
       ],
       classJiage: [
-        { required: true, message: '请输入作物价格', trigger: 'blur' }
+        { required: true, message: '请输入作物价格（元）', trigger: 'blur' }
       ]
     };
     

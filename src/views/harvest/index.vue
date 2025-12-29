@@ -178,6 +178,8 @@
             <el-input
               v-model="harvestForm.className"
               placeholder="请输入种植作物"
+              :readonly="isEditMode"
+              :class="{ 'readonly-input': isEditMode }"
               clearable
             />
           </el-form-item>
@@ -900,6 +902,16 @@
     height: 30px;
     font-size: 15px;
   }
+
+.readonly-input :deep(.el-input__wrapper) {
+  background-color: #f2f3f5;
+  border-color: #dcdfe6;
+  box-shadow: none;
+}
+
+.readonly-input :deep(.el-input__inner) {
+  color: #909399;
+}
 </style>
 
 <style>
