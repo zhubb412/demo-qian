@@ -57,7 +57,7 @@
       <!-- 收获记录卡片列表 -->
         <div class="batch-card-grid" v-if="harvestList.length > 0">
           <el-row :gutter="24">
-          <el-col :span="7" v-for="item in harvestList" :key="item.farmplotId">
+          <el-col :span="6" v-for="item in harvestList" :key="item.farmplotId">
               <el-card class="batch-card" shadow="hover">
                 <div class="batch-card-header">
                   <div class="header-content">
@@ -149,7 +149,7 @@
             :current-page="pageNum"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
-            :page-sizes="[9, 18, 27, 36]"
+            :page-sizes="[8, 12, 16, 20]"
           />
         </div>
       </el-card>
@@ -170,7 +170,7 @@
       <el-dialog 
         :title="dialogTitle" 
         v-model="dialogVisible" 
-        width="600px"
+        width="500px"
         @close="handleDialogClose"
       >
         <el-form
@@ -273,7 +273,7 @@
   const harvestList = ref<ReadyHarvestItem[]>([])
   const total = ref(0)
   const pageNum = ref(1)
-  const pageSize = ref(9)
+  const pageSize = ref(12)
 
   /**
    * 获取可收获地块列表

@@ -53,24 +53,13 @@
                             </span>
                         </template>
                         <div class="task-description">
-                            <div class="text-lg font-bold mb-4">任务详情：</div>
-                            <div class="mt-4">
+                            <div class="text-lg font-bold mb-4 task-detail-label">任务详情：</div>
+                            <div class="mt-4 task-detail-value">
                                     {{ form.farmtaskName || '--暂无描述--' }}
                                 </div>
                         </div>
                         
-                        <!-- <div class="mt-8">
-                            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
-                                <span class="font-bold text-lg mr-2" style="color: black;">操作信息</span>
-                                <div style="flex-grow: 1; height: 1px; background-color: #d1d5db;"></div>
-                            </div>
-                            <div style="height: 150px; overflow-y: auto;">
-                                <div v-for="(log, index) in logList" :key="index" class="leading-8">
-                                    {{ index + 1 }}、{{ log.createTime }} ，
-                                    由<span class="text-warning font-bold px-2">{{ log.operName }}</span><span>{{log.operDes}}</span>
-                                </div>
-                            </div>
-                        </div> -->
+                  
 
                     
                     </el-tab-pane>
@@ -407,6 +396,16 @@ watch(() => props.taskId, (newVal) => {
 
 .task-description > .text-lg {
   margin-bottom: 12px;
+}
+
+.task-detail-label {
+  font-weight: 900;
+  color: #000;
+}
+
+.task-detail-value {
+  font-weight: 900;
+  color: #000;
 }
 
 .mt-8 {

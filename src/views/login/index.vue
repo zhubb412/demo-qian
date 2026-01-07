@@ -23,6 +23,7 @@
         :model="currentForm"
         :rules="dataRule"
         label-position="top"
+        :validate-on-rule-change="false"
         @submit.prevent="onSubmit"
       >
         <!-- 用户名输入框（登录与注册均使用） -->
@@ -80,7 +81,7 @@
 
 <script setup lang="ts">
 // 引入Vue响应式工具函数
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref, computed, nextTick, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 // 引入Vue Router的导航函数
 import { useRouter, useRoute } from 'vue-router'
@@ -276,6 +277,14 @@ function onReset() {
     registerForm.confirmPassword = ''
   }
 }
+
+// 监听 activeTab 变化，切换时清除验证状态
+watch(activeTab, () => {
+  // 使用 nextTick 确保在 DOM 更新后再清除验证状态
+  nextTick(() => {
+    formRef.value?.clearValidate()
+  })
+})
 
 // 切换Tab函数：在登录和注册之间切换
 function toggleTab() {

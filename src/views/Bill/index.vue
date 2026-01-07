@@ -188,6 +188,22 @@ const getList = async () => {
 }
 
 /**
+ * 获取所有账单列表（用于过滤已使用的地块）
+ */
+const getAllBillList = async () => {
+  try {
+    const res = await billList.listBill({
+      current: 1,
+      size: 1000 // 获取所有数据
+    })
+    return res.records || []
+  } catch (error) {
+    console.error('获取账单列表失败:', error)
+    return []
+  }
+}
+
+/**
  * 搜索按钮操作
  */
 const handleQuery = () => {
@@ -254,6 +270,13 @@ const handleFarmPlotChange = (farmplotName: string) => {
 const handleAdd = async () => {
   // 打开对话框前先获取地块列表
   await getFarmPlotList()
+  // 获取所有账单列表，过滤掉已使用的地块
+  const allBills = await getAllBillList()
+  const usedFarmIds = new Set(allBills.map(bill => bill.farmId).filter(id => id != null))
+  // 过滤掉已使用的地块
+  farmPlotOptions.value = farmPlotListData.value.filter(
+    plot => !usedFarmIds.has(plot.farmplotId)
+  )
   // 重置表单
   Object.assign(form, {
     id: undefined,
@@ -269,7 +292,7 @@ const handleAdd = async () => {
  * 修改按钮操作
  */
 const handleUpdate = async (row: BillItem) => {
-  // 打开对话框前先获取地块列表
+  // 打开对话框前先获取地块列表（编辑时显示所有地块，不过滤）
   await getFarmPlotList()
   // 填充表单数据
   Object.assign(form, {

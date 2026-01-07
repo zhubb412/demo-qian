@@ -31,7 +31,7 @@
           </div>
           <div class="stat-icon">
             <el-icon :size="48" color="#e6a23c">
-              <Farm />
+              <Refresh />
             </el-icon>
           </div>
         </div>
@@ -49,7 +49,7 @@
           </div>
           <div class="stat-icon">
             <el-icon :size="48" color="#67c23a">
-              <Farm />
+              <Grid />
             </el-icon>
           </div>
         </div>
@@ -232,7 +232,7 @@ import { farmPlotList } from '@/api/farmPlotApi'
 import { classManagementList } from '@/api/classManagementApi'
 import { farmTaskList, type FarmTaskItem } from '@/api/farmTaskApi'
 import { cropRotationList } from '@/api/cropRotationApi'
-import { Grid, Menu,MagicStick, User, Document, Check } from '@element-plus/icons-vue'
+import { Grid, Menu, MagicStick, User, Document, Check, MapLocation, Refresh, Crop } from '@element-plus/icons-vue'
 import * as echarts from 'echarts' // 引入 ECharts 用于绘制饼状图
 
 // 统计数据

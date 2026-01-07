@@ -208,10 +208,10 @@
         </el-form-item>
 
         <!-- 作物价格 -->
-        <el-form-item label="作物价格" prop="classJiage">
+        <el-form-item label="种子作物价格" prop="classJiage">
           <el-input 
             v-model="formData.classJiage" 
-            placeholder="请输入作物价格(元)"
+            placeholder="请输入种子作物价格(元)"
             clearable
           />
         </el-form-item>
@@ -439,7 +439,7 @@ export default {
         { required: true, message: '请选择适合收获月份', trigger: 'change' }
       ],
       classJiage: [
-        { required: true, message: '请输入作物价格（元）', trigger: 'blur' }
+        { required: true, message: '请输入种子作物价格（元）', trigger: 'blur' }
       ]
     };
     
